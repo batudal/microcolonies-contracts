@@ -3,33 +3,24 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../../Interfaces/ITournament.sol";
+import "../../Interfaces/IMicroColonies.sol";
 
 contract FeromonRace is Initializable {
     uint256 immutable MAX_APPROVAL = 2**256 - 1;
 
-    struct Contracts {
-        address contractAnt;
-        address contractQueen;
-        address contractLarva;
-        address contractWorker;
-        address contractSoldier;
-        address contractMale;
-        address contractPrincess;
-        address contractLollipop;
-        address contractFunghi;
-        address contractFeromon;
-    }
-    Contracts public contracts;
-
+    uint256 public epochDuration;
     uint256 public tournamentDuration;
     string public tournamentTitle;
     uint256 public startDate;
     address public currencyToken;
     uint256 public entranceFee;
-    address[] public implementations = new address[](10);
     address[] public participants;
+    address public implementation;
 
     mapping(address => string) public nicknames;
+
+    // x -> 112x (epoch -> tournament)
 
     function initialize(
         string memory _tournamentTitle,
@@ -37,39 +28,42 @@ contract FeromonRace is Initializable {
         uint256 _entranceFee,
         address _currencyToken,
         uint256 _epochDuration,
-        uint256 _tournamentDuration,
         uint256 _startDate,
-        address[] memory _implementations
+        address _implementation
     ) public initializer {
         tournamentTitle = _tournamentTitle;
-        tournamentDuration = _tournamentDuration;
+        tournamentDuration = _epochDuration * 112;
         currencyToken = _currencyToken;
         entranceFee = _entranceFee;
         startDate = _startDate;
-        // clone and initialize subcontracts
+        implementation = _implementation;
+
         for (uint256 i = 0; i < _participants.length; i++) {
             participants.push(_participants[i]);
         }
     }
 
-    function enterTournament(string memory nickname) public payable {
-        require(msg.value == entranceFee, "Pay to enter.");
-        require(block.timestamp >= startDate, "Tournament not started.");
-        bool access = false;
+    modifier onlyParticipant() {
+        bool access;
         for (uint256 i = 0; i < participants.length; i++) {
             if (participants[i] == msg.sender) {
                 access = true;
             }
         }
-        require(access == true, "No access.");
-        nicknames[msg.sender] = nickname;
-        setApprovals(msg.sender);
-        sendPack(msg.sender);
+        require(access, "You don't have access.");
     }
 
-    function sendPack(address _user) internal {
-        ILarvaANT(contracts.contractLarva).mint(_user, 10);
-        ILollipop(contracts.contractLollipop).mint(_user);
+    function enterTournament(string memory _nickname, uint256 _pack)
+        public
+        onlyParticipant
+    {
+        require(
+            currencyToken.balanceOf(msg.sender) > entranceFee,
+            "You don't have enough tokens."
+        );
+        require(block.timestamp >= startDate, "Tournament not started.");
+        nicknames[msg.sender] = _nickname;
+        IMicroColonies(implementation).openPack(_pack);
     }
 
     function distributeRewards() public {

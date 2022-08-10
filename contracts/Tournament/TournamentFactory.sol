@@ -1,14 +1,15 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./Tournament.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./Modes/FeromonRace.sol";
 
-contract TournamentFactory {
+contract TournamentFactory is Initializable {
     Tournament[] public tournaments;
-    address[] public implementations = new address[](10);
+    address[] public implementations;
     mapping(address => address[]) public userTournaments;
 
-    constructor(address[] memory _implementations) {
+    function initialize(address[] memory _implementations) public initializer {
         require(_implementations.length == 10);
         for (uint256 i = 0; i < _implementations.length; i++) {
             implementations[i] = _implementations[i];
