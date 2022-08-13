@@ -20,11 +20,13 @@ contract MicroColonies is Initializable {
         uint8 lollipopDuration;
     }
     struct Tariff {
-        uint16 larvaPortion;
+        uint256 larvaPortion;
+        uint256 queenPortion;
         uint256 conversionFee;
     }
     struct Q {
         uint256 level;
+        uint256 eggs;
         uint256 timestamp;
         bool inNest;
     }
@@ -59,6 +61,11 @@ contract MicroColonies is Initializable {
         bool used;
         uint256 timestamp;
     }
+    struct Mission {
+        uint256 antType;
+        uint256 id;
+        uint256 timestamp;
+    }
 
     /// @dev user => QLWSMP => ids
     mapping(address => mapping(uint256 => uint256[])) public userToids;
@@ -67,6 +74,7 @@ contract MicroColonies is Initializable {
     mapping(address => uint256) public feromonBalance;
     mapping(address => uint256) public capacity;
     mapping(address => uint256) public nested;
+    mapping(address => Mission) public missions;
 
     /// @dev QLWSMP(012345) => counter;
     mapping(uint256 => uint256) counters;
@@ -76,6 +84,13 @@ contract MicroColonies is Initializable {
     mapping(uint256 => S) public s;
     mapping(uint256 => M) public m;
     mapping(uint256 => P) public p;
+
+    uint256[3] public fert;
+
+    modifier xp(uint256 _amount) {
+        feromonBalance[msg.sender] += _amount;
+        _;
+    }
 
     function initialize() external initializer {
         tournament = ITournament(msg.sender);
@@ -87,6 +102,7 @@ contract MicroColonies is Initializable {
         schedule.queenPeriod = 1;
         schedule.lollipopDuration = 1;
         nonce = 42;
+        fert = [5, 9, 12];
     }
 
     // generalized fxns
@@ -188,24 +204,6 @@ contract MicroColonies is Initializable {
         nested[_user]++;
     }
 
-    modifier xp(uint256 _amount) {
-        feromonBalance[msg.sender] += _amount;
-        _;
-    }
-
-    // qlwsmp
-    function hatch(uint256 _amount) public xp(_amount) {
-        require(
-            _amount <= nested[msg.sender],
-            "You don't have enough nest capacity."
-        );
-        uint256[] memory larvae = userToids[msg.sender][1];
-        require(_amount <= larvae.length);
-        for (uint256 i = 0; i < larvae.length; i++) {
-            _hatch(msg.sender, larvae[i]);
-        }
-    }
-
     // larva fxns
     function feedLarvae(uint256 _amount) public {
         uint256[] memory feedable = getFeedable(msg.sender);
@@ -234,5 +232,55 @@ contract MicroColonies is Initializable {
                 feedable[i] = userToids[_user][1][i];
             }
         }
+    }
+
+    function hatch(uint256 _amount) public xp(_amount) {
+        require(
+            _amount <= nested[msg.sender],
+            "You don't have enough nest capacity."
+        );
+        uint256[] memory larvae = userToids[msg.sender][1];
+        require(_amount <= larvae.length);
+        for (uint256 i = 0; i < larvae.length; i++) {
+            _hatch(msg.sender, larvae[i]);
+        }
+    }
+
+    function claimAllEggs() public {
+        for (uint256 i; i < userToids[msg.sender][0].length; i++) {
+            claimEggs(userToids[msg.sender][0][i]);
+        }
+    }
+
+    function claimEggs(uint256 _id) public {
+        uint256 deserved = eggsLaid(_id) - q[_id].eggs;
+        require(deserved > 0, "No eggs laid yet.");
+        q[_id].eggs += deserved;
+        _print(msg.sender, 1, deserved);
+        feromonBalance[msg.sender] += deserved;
+    }
+
+    function eggsLaid(uint256 _id) public returns (uint256 eggs) {
+        uint256 epochs = (block.timestamp - q[_id].timestamp) /
+            tournament.epochDuration();
+        uint256 initEggs = fert[q[_id].level - 1];
+        if (epochs > initEggs) {
+            epochs = initEggs;
+        }
+        for (uint256 i = 0; i < epochs; i++) {
+            eggs += initEggs;
+            initEggs -= 1;
+        }
+    }
+
+    function feedQueen(uint256 _id) public {
+        claimEggs(_id);
+        uint256 epochs = (block.timestamp - q[_id].timestamp) /
+            tournament.epochDuration();
+        uint256 amount = epochs * tariff.queenPortion;
+        q[_id].timestamp = block.timestamp;
+        q[_id].eggs = 0;
+        funghiBalance[msg.sender] -= amount;
+        feromonBalance[msg.sender] += epochs;
     }
 }
