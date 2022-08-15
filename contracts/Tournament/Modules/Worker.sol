@@ -29,15 +29,15 @@ contract Worker is Initializable {
 
     function claimConverted(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(micro.w(_id).mission.missionTimestamp != 0);
+        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
-            micro.w(_id).mission.missionTimestamp +
+            micro.w(ids[0]).mission.missionTimestamp +
                 micro.schedule().conversion /
                 speed <
                 block.timestamp
         );
-        require(!micro.w(_id).mission.missionFinalized);
+        require(!micro.w(ids[0]).mission.missionFinalized);
         for (uint256 i; i < ids.length; i++) {
             micro.kill(msg.sender, 2, 2, ids[i]);
         }
@@ -57,15 +57,15 @@ contract Worker is Initializable {
 
     function claimFarmed(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(micro.w(_id).mission.missionTimestamp != 0);
+        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
-            micro.w(_id).mission.missionTimestamp +
+            micro.w(ids[0]).mission.missionTimestamp +
                 micro.schedule().workerFarm /
                 speed <
                 block.timestamp
         );
-        require(!micro.w(_id).mission.missionFinalized);
+        require(!micro.w(ids[0]).mission.missionFinalized);
         micro.earnFunghi(
             2,
             2,
@@ -94,15 +94,15 @@ contract Worker is Initializable {
 
     function claimBuilt(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(micro.w(_id).mission.missionTimestamp != 0);
+        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
-            micro.w(_id).mission.missionTimestamp +
+            micro.w(ids[0]).mission.missionTimestamp +
                 micro.schedule().workerBuild /
                 speed <
                 block.timestamp
         );
-        require(!micro.w(_id).mission.missionFinalized);
+        require(!micro.w(ids[0]).mission.missionFinalized);
         micro.increaseCapacity(
             2,
             2,
@@ -120,10 +120,11 @@ contract Worker is Initializable {
     }
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
+        uint256 id = micro.getMissionIds(_user, 2, _id)[0];
         return
-            (micro.w(_id).mission.missionTimestamp >
+            (micro.w(id).mission.missionTimestamp >
                 micro.lollipops(_user).timestamp &&
-                micro.w(_id).mission.missionTimestamp <=
+                micro.w(id).mission.missionTimestamp <=
                 (micro.lollipops(_user).timestamp +
                     micro.schedule().lollipopDuration))
                 ? true

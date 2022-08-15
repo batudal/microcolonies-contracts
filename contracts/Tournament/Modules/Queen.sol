@@ -8,7 +8,6 @@ import "../../Interfaces/ITournament.sol";
 contract Queen is Initializable {
     IMicroColonies private micro;
     ITournament private tournament;
-
     uint256[3] public fert;
 
     function initialize(address _micro) external initializer {

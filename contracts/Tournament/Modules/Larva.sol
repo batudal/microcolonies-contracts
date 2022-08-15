@@ -15,10 +15,11 @@ contract Larva is Initializable {
     }
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
+        uint256 id = micro.getMissionIds(_user, 5, _id)[0];
         return
-            (micro.l(_id).mission.missionTimestamp >
+            (micro.l(id).mission.missionTimestamp >
                 micro.lollipops(_user).timestamp &&
-                micro.l(_id).mission.missionTimestamp <=
+                micro.l(id).mission.missionTimestamp <=
                 (micro.lollipops(_user).timestamp +
                     micro.schedule().lollipopDuration))
                 ? true

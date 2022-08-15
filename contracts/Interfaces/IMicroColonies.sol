@@ -23,6 +23,7 @@ struct Schedule {
     uint8 incubation;
     uint8 queenPeriod;
     uint8 lollipopDuration;
+    uint256 mating;
 }
 
 struct Q {

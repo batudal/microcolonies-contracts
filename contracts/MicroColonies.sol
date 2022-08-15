@@ -26,6 +26,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint8 incubation;
         uint8 queenPeriod;
         uint8 lollipopDuration;
+        uint256 mating;
     }
     struct Tariff {
         uint256 larvaPortion;
