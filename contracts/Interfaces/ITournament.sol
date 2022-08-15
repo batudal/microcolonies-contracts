@@ -2,5 +2,5 @@
 pragma solidity ^0.8.0;
 
 interface ITournament {
-    function epochDuration() external returns (uint256);
+    function epochDuration() external view returns (uint256);
 }
