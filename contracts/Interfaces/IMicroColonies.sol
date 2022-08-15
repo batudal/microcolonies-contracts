@@ -12,6 +12,7 @@ struct Tariff {
 }
 
 struct Schedule {
+    uint256 epoch;
     uint8 workerFarm;
     uint8 workerBuild;
     uint8 conversion;
@@ -67,6 +68,11 @@ struct Mission {
 interface IMicroColonies {
     function openPack(address _user, uint256 _pack) external;
 
+    function lollipops(address _user)
+        external
+        view
+        returns (Lolli calldata lolli);
+
     function getUserIds(
         address _user,
         uint256 _type,
@@ -82,6 +88,8 @@ interface IMicroColonies {
     function tariff() external view returns (Tariff calldata tariff);
 
     function schedule() external view returns (Schedule calldata schedule);
+
+    function funghiBalance(address) external view returns (uint256 balance);
 
     function feromonBalance(address) external view returns (uint256 balance);
 
@@ -157,4 +165,53 @@ interface IMicroColonies {
     function m(uint256 _id) external view returns (M calldata m);
 
     function p(uint256 _id) external view returns (P calldata p);
+
+    function addEggs(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id,
+        uint256 _amount
+    ) external;
+
+    function resetQueen(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) external;
+
+    function spendFunghi(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) external;
+
+    function spendFeromon(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) external;
+
+    function nonce() external view returns (uint256 nonce);
+
+    function capacity(address _user) external view returns (uint256 capacity);
+
+    function nested(address _user) external view returns (uint256 capacity);
+
+    function setNonce(uint256 _type, uint256 _targetType)
+        external
+        returns (uint256 nextNonce);
+
+    function participants()
+        external
+        view
+        returns (address[] calldata participants);
+
+    function finalizeMission(
+        address _user,
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) external;
 }

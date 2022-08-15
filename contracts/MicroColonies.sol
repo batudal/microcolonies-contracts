@@ -12,8 +12,10 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     Tariff public tariff;
     ITournament public tournament;
     uint256 private nonce;
+    address[] public participants;
 
     struct Schedule {
+        uint256 epoch;
         uint8 workerFarm;
         uint8 workerBuild;
         uint8 conversion;
@@ -49,7 +51,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         bool inNest;
     }
     struct S {
-        uint256 hp; // 4..2 hp 1 zombie 0 null
+        uint256 hp; // 3..1 hp 0 dead
         Mission mission; // missionType (0-scout, 1-harvest, 2-defend)
         uint256 damageTimestamp;
         bool inNest;
@@ -83,6 +85,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     mapping(address => uint256) public capacity;
     mapping(address => uint256) public nested;
     mapping(uint256 => uint256[]) public access;
+    mapping(uint256 => address) public modules;
 
     /// @dev QLWSMP(012345) => counter;
     mapping(uint256 => uint256) counters;
@@ -93,49 +96,68 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     mapping(uint256 => M) public m;
     mapping(uint256 => P) public p;
 
-    uint256[3] public fert;
-
-    // modifiers
+    // modifier
     modifier xp(uint256 _amount) {
         feromonBalance[msg.sender] += _amount;
         _;
     }
 
     modifier checkAccess(uint256 _type, uint256 _targetType) {
+        _checkAccess(_type, _targetType);
+        _;
+    }
+
+    function _checkAccess(uint256 _type, uint256 _targetType)
+        public
+        view
+        virtual
+    {
         bool passed;
         for (uint256 i; i < access[_type].length; i++) {
             if (access[_type][i] == _targetType) {
                 passed = true;
             }
         }
+        if (_type == _targetType) {
+            passed = true;
+        }
         require(passed);
-        _;
     }
 
-    // initialization
+    // initializer
     function initialize() external initializer {
         tournament = ITournament(msg.sender);
+        schedule.epoch = 0;
         schedule.workerFarm = 1;
         schedule.workerBuild = 5;
+        schedule.conversion = 1;
         schedule.soldierRaid = 3;
+        schedule.zombification = 5;
         schedule.zombieHarvest = 5;
         schedule.zombieGuard = 1;
         schedule.incubation = 1;
         schedule.queenPeriod = 1;
         schedule.lollipopDuration = 1;
-        schedule.zombification = 10;
+        tariff.larvaPortion = 0;
+        tariff.queenPortion = 0;
+        tariff.queenUpgrade = 0;
+        tariff.conversion = 0;
+        tariff.zombieHarvest = 0;
+        tariff.farmReward = 0;
+        tariff.buildReward = 0;
         nonce = 42;
-        fert = [5, 9, 12];
     }
 
-    function setAccess(uint256 _moduleId, uint256[] calldata addrs)
-        public
-        onlyOwner
-    {
-        access[_moduleId] = addrs;
+    function setAccess(
+        uint256 _moduleId,
+        address _moduleAddr,
+        uint256[] calldata _targetAddrs
+    ) public onlyOwner {
+        access[_moduleId] = _targetAddrs;
+        modules[_moduleId] = _moduleAddr;
     }
 
-    // generalized fxns
+    // view fxn
     function getUserSpeed(address _user) public view returns (uint256 speed) {
         speed = lollipops[_user].timestamp + schedule.lollipopDuration >
             block.timestamp
@@ -264,6 +286,32 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         }
     }
 
+    function isBoosted(
+        address _user,
+        uint256 _type,
+        uint256 _id
+    ) public view returns (bool) {
+        if (
+            _type == 1 &&
+            l[_id].mission.missionTimestamp > lollipops[_user].timestamp &&
+            l[_id].mission.missionTimestamp <=
+            (lollipops[_user].timestamp + schedule.lollipopDuration)
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    // mutate fxn
+    function setNonce(uint256 _type, uint256 _targetType)
+        public
+        checkAccess(_type, _targetType)
+        returns (uint256 nextNonce)
+    {
+        nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
+        nextNonce = nonce;
+    }
+
     function openPack(address _user, uint256 _pack) public {
         require(msg.sender == address(tournament), "Only tournament can call.");
         if (_pack == 0) {
@@ -275,6 +323,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             print(_user, 0, 1, 10);
             print(_user, 0, 0, 1);
         }
+    }
+
+    function useLollipop() public {
+        require(!lollipops[msg.sender].used);
+        lollipops[msg.sender].used = true;
+        lollipops[msg.sender].timestamp = block.timestamp;
     }
 
     function kill(
@@ -301,14 +355,33 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             "You don't have enough nest capacity."
         );
         for (uint256 i; i < _amount; i++) {
+            if (_targetType == 0) {
+                q[counters[0]] = Q(1, 0, block.timestamp, true);
+            } else if (_targetType == 1) {
+                l[counters[1]] = L(Mission(0, 0, 0, false));
+            } else if (_targetType == 5) {
+                p[counters[5]] = P(Mission(0, 0, 0, false), true);
+            } else if (_targetType == 4) {
+                m[counters[4]] = M(Mission(0, 0, 0, false), true);
+            } else if (_targetType == 3) {
+                s[counters[3]] = S(4, Mission(0, 0, 0, false), 0, true);
+            } else if (_targetType == 2) {
+                w[counters[2]] = W(5, Mission(0, 0, 0, false), true);
+            }
             userIds[_user][_targetType].push(counters[_targetType]);
             counters[_targetType]++;
             nested[_user]++;
         }
     }
 
-    // module ids
-    // 0..5 Q..P
+    function createMission(
+        address _user,
+        uint256 _type,
+        uint256 _targetType
+    ) public checkAccess(_type, _targetType) returns (uint256 highest) {
+        highest = Quicksort.getHighest(userMissions[_user][_type]) + 1;
+        userMissions[_user][_type].push(highest);
+    }
 
     function addToMission(
         uint256 _type,
@@ -336,6 +409,28 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         }
     }
 
+    function finalizeMission(
+        address _user,
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) public checkAccess(_type, _targetType) {
+        uint256[] memory ids = getMissionIds(_user, _type, _id);
+        for (uint256 i; i < ids.length; i++) {
+            if (_type == 1) {
+                l[ids[i]].mission.missionFinalized = true;
+            } else if (_type == 2) {
+                w[ids[i]].mission.missionFinalized = true;
+            } else if (_type == 3) {
+                s[ids[i]].mission.missionFinalized = true;
+            } else if (_type == 4) {
+                m[ids[i]].mission.missionFinalized = true;
+            } else if (_type == 5) {
+                p[ids[i]].mission.missionFinalized = true;
+            }
+        }
+    }
+
     function earnXp(
         uint256 _type,
         uint256 _targetType,
@@ -354,6 +449,33 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         funghiBalance[_user] += _amount;
     }
 
+    function spendFunghi(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) public checkAccess(_type, _targetType) {
+        funghiBalance[_user] -= _amount;
+    }
+
+    function spendFeromon(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) public checkAccess(_type, _targetType) {
+        feromonBalance[_user] -= _amount;
+    }
+
+    function resetQueen(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) public checkAccess(_type, _targetType) {
+        q[_id].timestamp = block.timestamp;
+        q[_id].eggs = 0;
+    }
+
     function increaseCapacity(
         uint256 _type,
         uint256 _targetType,
@@ -361,15 +483,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _amount
     ) public checkAccess(_type, _targetType) {
         capacity[_user] += _amount;
-    }
-
-    function createMission(
-        address _user,
-        uint256 _type,
-        uint256 _targetType
-    ) public checkAccess(_type, _targetType) returns (uint256 highest) {
-        highest = Quicksort.quick(userMissions[_user][_type]) + 1;
-        userMissions[_user][_type].push(highest);
     }
 
     function decreaseHP(
@@ -384,140 +497,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         }
     }
 
-    // // larva fxns
-    // function incubate(uint256 _amount, uint256 _feedAmount) public xp(_amount) {
-    //     uint256[] memory larvae = getUserIds(msg.sender, 1, true);
-    //     require(_amount <= larvae.length, "Not enough larvae");
-    //     require(
-    //         funghiBalance[msg.sender] > _feedAmount * tariff.larvaPortion,
-    //         "You don't have enough $Funghi"
-    //     );
-    //     uint256 highest = addMission(msg.sender, 1);
-    //     for (uint256 i; i < _amount; i++) {
-    //         l[larvae[i]].mission.missionId = highest + 1;
-    //         l[larvae[i]].mission.missionType = _feedAmount > 0 ? 1 : 0;
-    //         l[larvae[i]].mission.missionTimestamp = block.timestamp;
-    //         _feedAmount = _feedAmount > 0 ? _feedAmount - 1 : 0;
-    //     }
-    //     funghiBalance[msg.sender] -= tariff.larvaPortion * _feedAmount;
-    //     feromonBalance[msg.sender] += _amount;
-    // }
-
-    // function hatch(uint256 _id) public {
-    //     uint256[] memory ids = getMissionIds(msg.sender, 1, _id);
-    //     require(
-    //         ids.length <= capacity[msg.sender] - nested[msg.sender],
-    //         "You don't have enough nest capacity."
-    //     );
-    //     for (uint256 i = 0; i < ids.length; i++) {
-    //         _hatch(msg.sender, ids[i]);
-    //     }
-    // }
-
-    // function isBoosted(
-    //     address _user,
-    //     uint256 _type,
-    //     uint256 _id
-    // ) public view returns (bool) {
-    //     if (
-    //         _type == 1 &&
-    //         l[_id].mission.missionTimestamp > lollipops[_user].timestamp &&
-    //         l[_id].mission.missionTimestamp <=
-    //         (lollipops[_user].timestamp + schedule.lollipopDuration)
-    //     ) {
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    // function _hatch(address _user, uint256 _id) private {
-    //     uint16 modulo = l[_id].mission.missionType == 1 ? 50 : 100;
-    //     uint8 speed = _isBoosted(_user, 1, _id) ? 2 : 1;
-    //     require(l[_id].mission.missionTimestamp > 0);
-    //     require(
-    //         block.timestamp - l[_id].mission.missionTimestamp >
-    //             schedule.incubation / speed
-    //     );
-    //     nonce =
-    //         uint256(keccak256(abi.encodePacked(msg.sender, nonce))) %
-    //         modulo;
-    //     require(nested[_user] < capacity[_user]);
-    //     if (nonce < 3) {
-    //         p[counters[5]] = P(Mission(0, 0, 0, false), true);
-    //         _print(_user, 5, 1);
-    //     } else if (nonce >= 3 && nonce < 18) {
-    //         m[counters[4]] = M(Mission(0, 0, 0, false), true);
-    //         _print(_user, 4, 1);
-    //     } else if (nonce >= 18 && nonce < 33) {
-    //         s[counters[3]] = S(4, Mission(0, 0, 0, false), 0, true);
-    //         _print(_user, 3, 1);
-    //     } else {
-    //         w[counters[2]] = W(5, Mission(0, 0, 0, false), true);
-    //         _print(_user, 2, 1);
-    //     }
-    //     _kill(_user, 1, _id);
-    //     nested[_user]++;
-    // }
-
-    // // queen fxns
-    // function claimAllEggs() public {
-    //     for (uint256 i; i < userIds[msg.sender][0].length; i++) {
-    //         claimEggs(userIds[msg.sender][0][i]);
-    //     }
-    // }
-
-    // function claimEggs(uint256 _id) public {
-    //     uint256 deserved = eggsLaid(_id) - q[_id].eggs;
-    //     if (deserved > 0) {
-    //         q[_id].eggs += deserved;
-    //         _print(msg.sender, 1, deserved);
-    //         feromonBalance[msg.sender] += deserved;
-    //     }
-    // }
-
-    // function eggsLaid(uint256 _id) public view returns (uint256 eggs) {
-    //     uint256 epochs = (block.timestamp - q[_id].timestamp) /
-    //         tournament.epochDuration();
-    //     uint256 initEggs = fert[q[_id].level - 1];
-    //     if (epochs > initEggs) {
-    //         epochs = initEggs;
-    //     }
-    //     for (uint256 i = 0; i < epochs; i++) {
-    //         eggs += initEggs;
-    //         initEggs -= 1;
-    //     }
-    // }
-
-    // function feedQueen(uint256 _id) public {
-    //     claimEggs(_id);
-    //     uint256 epochs = (block.timestamp - q[_id].timestamp) /
-    //         tournament.epochDuration();
-    //     uint256 amount = epochs * tariff.queenPortion;
-    //     q[_id].timestamp = block.timestamp;
-    //     q[_id].eggs = 0;
-    //     funghiBalance[msg.sender] -= amount;
-    //     feromonBalance[msg.sender] += epochs;
-    // }
-
-    // function queenUpgrade(uint256 _id) public {
-    //     uint256 amount = q[_id].level == 1
-    //         ? tariff.queenUpgrade
-    //         : tariff.queenUpgrade * 3;
-    //     require(feromonBalance[msg.sender] >= amount, "Not enough feromon.");
-    //     require(q[_id].level < 3);
-    //     claimEggs(_id);
-    //     feedQueen(_id);
-    //     feromonBalance[msg.sender] -= amount;
-    //     q[_id].level += 1;
-    // }
-
-    // function getQueenEnergy(uint256 _id) public view returns (uint256 energy) {
-    //     uint256 max = tournament.epochDuration() * fert[q[_id].level - 1];
-    //     uint256 diff = block.timestamp - q[_id].timestamp;
-    //     if (diff > max) {
-    //         energy = 0;
-    //     } else {
-    //         energy = ((max - diff) * 100) / max;
-    //     }
-    // }
+    function addEggs(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id,
+        uint256 _amount
+    ) public checkAccess(_type, _targetType) {
+        q[_id].eggs += _amount;
+    }
 }

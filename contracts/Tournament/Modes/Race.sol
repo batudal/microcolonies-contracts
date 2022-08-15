@@ -7,7 +7,7 @@
 // import "../../Interfaces/ITournament.sol";
 // import "../../Interfaces/IMicroColonies.sol";
 
-// contract FeromonRace is Initializable {
+// contract Race is Initializable {
 //     uint256 immutable MAX_APPROVAL = 2**256 - 1;
 
 //     uint256 public epochDuration;

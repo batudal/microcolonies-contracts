@@ -29,7 +29,7 @@ contract Worker is Initializable {
 
     function claimConverted(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = micro.isBoosted(msg.sender, 2, _id) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(_id).mission.missionTimestamp != 0);
         require(
             micro.w(_id).mission.missionTimestamp +
@@ -42,6 +42,7 @@ contract Worker is Initializable {
             micro.kill(msg.sender, 2, 2, ids[i]);
         }
         micro.print(msg.sender, 2, 3, ids.length);
+        micro.finalizeMission(msg.sender, 2, 2, _id);
     }
 
     function farm(uint256 _amount) public {
@@ -56,7 +57,7 @@ contract Worker is Initializable {
 
     function claimFarmed(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = micro.isBoosted(msg.sender, 2, _id) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(_id).mission.missionTimestamp != 0);
         require(
             micro.w(_id).mission.missionTimestamp +
@@ -78,6 +79,7 @@ contract Worker is Initializable {
                 micro.decreaseHP(2, 2, ids[i]);
             }
         }
+        micro.finalizeMission(msg.sender, 2, 2, _id);
     }
 
     function build(uint256 _amount) public {
@@ -92,7 +94,7 @@ contract Worker is Initializable {
 
     function claimBuilt(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = micro.isBoosted(msg.sender, 2, _id) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(_id).mission.missionTimestamp != 0);
         require(
             micro.w(_id).mission.missionTimestamp +
@@ -114,5 +116,17 @@ contract Worker is Initializable {
                 micro.decreaseHP(2, 2, ids[i]);
             }
         }
+        micro.finalizeMission(msg.sender, 2, 2, _id);
+    }
+
+    function isBoosted(address _user, uint256 _id) public view returns (bool) {
+        return
+            (micro.w(_id).mission.missionTimestamp >
+                micro.lollipops(_user).timestamp &&
+                micro.w(_id).mission.missionTimestamp <=
+                (micro.lollipops(_user).timestamp +
+                    micro.schedule().lollipopDuration))
+                ? true
+                : false;
     }
 }
