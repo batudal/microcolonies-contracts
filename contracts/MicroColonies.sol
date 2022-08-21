@@ -77,6 +77,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         bool missionFinalized;
     }
 
+    struct Inhibition {
+        uint256 start;
+        uint256 end;
+        bool deploy;
+    }
+
     /// @dev user => QLWSMP => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
     mapping(address => mapping(uint256 => uint256[])) public userMissions;
@@ -87,6 +93,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     mapping(address => uint256) public nested;
     mapping(uint256 => uint256[]) public access;
     mapping(uint256 => address) public modules;
+    mapping(uint256 => Inhibition) public inhibitions;
 
     /// @dev QLWSMP(012345) => counter;
     mapping(uint256 => uint256) counters;
@@ -332,6 +339,25 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         lollipops[msg.sender].timestamp = block.timestamp;
     }
 
+    function matingBoost(
+        address _user,
+        uint256 _type,
+        uint256 _targetType
+    ) public checkAccess(_type, _targetType) {
+        lollipops[_user].timestamp = block.timestamp;
+    }
+
+    function inhibit(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _epochs,
+        bool _deploy
+    ) public checkAccess(_type, _targetType) {
+        inhibitions[_targetType].start = block.timestamp;
+        inhibitions[_targetType].end = _epochs * tournament.epochDuration();
+        inhibitions[_targetType].deploy = _deploy;
+    }
+
     function kill(
         address _user,
         uint256 _type,
@@ -486,6 +512,15 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         capacity[_user] += _amount;
     }
 
+    function decreaseCapacity(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) public checkAccess(_type, _targetType) {
+        capacity[_user] -= _amount;
+    }
+
     function decreaseHP(
         uint256 _type,
         uint256 _targetType,
@@ -505,5 +540,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _amount
     ) public checkAccess(_type, _targetType) {
         q[_id].eggs += _amount;
+    }
+
+    function healSoldier(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) public checkAccess(_type, _targetType) {
+        s[_id].hp = 3;
+        s[_id].damageTimestamp = 0;
     }
 }

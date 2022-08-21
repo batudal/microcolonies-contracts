@@ -17,7 +17,7 @@ contract Soldier is Initializable {
         nonce = 42;
     }
 
-    function scout(uint256 _amount) public {
+    function scout(uint256 _amount) public isSafe(true) {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
         require(_amount <= ids.length, "Not enough soldiers.");
         uint256 missionId = micro.createMission(msg.sender, 3, 3);
@@ -42,6 +42,14 @@ contract Soldier is Initializable {
         }
     }
 
+    modifier isSafe(bool _deploy) {
+        uint256 now_ = block.timestamp;
+        if (micro.inhibitions(3).deploy == _deploy) {
+            require(now_ > micro.inhibitions(3).end);
+        }
+        _;
+    }
+
     function reveal(uint256 _id) public view returns (address target) {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
         uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
@@ -58,7 +66,7 @@ contract Soldier is Initializable {
         target = participants[prob];
     }
 
-    function retreat(uint256 _id) public {
+    function retreat(uint256 _id) public isSafe(false) {
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
 
@@ -94,7 +102,7 @@ contract Soldier is Initializable {
         }
     }
 
-    function attack(uint256 _id) public {
+    function attack(uint256 _id) public isSafe(false) {
         uint256[] memory soldiers = micro.getMissionIds(msg.sender, 3, _id);
         uint256[] memory targetSoldiers = micro.getUserIds(
             reveal(_id),

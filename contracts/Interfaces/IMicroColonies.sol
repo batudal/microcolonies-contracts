@@ -66,6 +66,12 @@ struct Mission {
     bool missionFinalized;
 }
 
+struct Inhibition {
+    uint256 start;
+    uint256 end;
+    bool deploy;
+}
+
 interface IMicroColonies {
     function openPack(address _user, uint256 _pack) external;
 
@@ -155,6 +161,13 @@ interface IMicroColonies {
         uint256 _amount
     ) external;
 
+    function decreaseCapacity(
+        uint256 _type,
+        uint256 _targetType,
+        address _user,
+        uint256 _amount
+    ) external;
+
     function q(uint256 _id) external view returns (Q calldata q);
 
     function l(uint256 _id) external view returns (L calldata l);
@@ -215,4 +228,33 @@ interface IMicroColonies {
         uint256 _targetType,
         uint256 _id
     ) external;
+
+    function getUserMissions(address _user, uint256 _type)
+        external
+        view
+        returns (uint256[] memory ids);
+
+    function healSoldier(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
+    ) external;
+
+    function matingBoost(
+        address _user,
+        uint256 _type,
+        uint256 _targetType
+    ) external;
+
+    function inhibit(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _epochs,
+        bool _deploy
+    ) external;
+
+    function inhibitions(uint256 _type)
+        external
+        view
+        returns (Inhibition calldata);
 }
