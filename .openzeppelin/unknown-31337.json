@@ -1,20 +1,20 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
-    "txHash": "0xfa74de1a4c7a9e8cee9ed17743b2338666d149e33097752d1db9c60000016ba0"
+    "address": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+    "txHash": "0x02b331953decc407e5593f78338af8c4b8f02fc2adcbefdb96906942d11289be"
   },
   "proxies": [
     {
-      "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
-      "txHash": "0x961f828616c8742a8d28df24a1413cdf3869f8dcf3265224d03b076ae482d7e5",
+      "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+      "txHash": "0x2885d5e577cac5bf69ebf1e736fa989e74c7a0b373579de380b6774ff599123b",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "1234d27d935e6099b8568693ebf28078b682dcd99f1e854270dc11481af8f739": {
-      "address": "0x9A676e781A523b5d0C0e43731313A708CB607508",
-      "txHash": "0x65b5e97b046f5e38331c0902692098b3a194fafd600537154ccef374b7812162",
+    "a903daa56720f3d8d17353701da578d730baf92275dd6a3ebdb0806508e2e6df": {
+      "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+      "txHash": "0x529ecb1a2779b3f2a7abd2d5e203267953ea4d9249b66d89c76e256e74f1adce",
       "layout": {
         "storage": [
           {
@@ -38,7 +38,7 @@
             "label": "tournaments",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(Tournament)1421)dyn_storage",
+            "type": "t_array(t_contract(Tournament)9341)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:9"
           },
@@ -68,7 +68,7 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_contract(Tournament)1421)dyn_storage": {
+          "t_array(t_contract(Tournament)9341)dyn_storage": {
             "label": "contract Tournament[]",
             "numberOfBytes": "32"
           },
@@ -76,7 +76,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(Tournament)1421": {
+          "t_contract(Tournament)9341": {
             "label": "contract Tournament",
             "numberOfBytes": "20"
           },

@@ -29,7 +29,6 @@ contract Tournament is Initializable {
     address public currencyToken;
     uint256 public entranceFee;
     address[] public participants;
-    address public implementation;
 
     mapping(address => string) public nicknames;
 
@@ -89,7 +88,7 @@ contract Tournament is Initializable {
         );
         require(block.timestamp >= startDate, "Tournament not started.");
         nicknames[msg.sender] = _nickname;
-        IMicroColonies(implementation).openPack(msg.sender, _pack);
+        IMicroColonies(contracts.microColonies).openPack(msg.sender, _pack);
     }
 
     function getNickname(address _user)

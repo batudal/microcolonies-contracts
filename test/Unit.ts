@@ -5,8 +5,13 @@ import { ethers, upgrades } from "hardhat";
 
 const takezo = "0xfB1C2FF46962B452C1731d44F0789bFb3607e63f";
 
-describe("Tournament Unit Tests", function () {
+describe("Tournament Tests", function () {
   async function deployFixture() {
+    // deploy mock erc20 and mint some
+    const [owner] = await ethers.getSigners();
+    const Mock20 = await ethers.getContractFactory("Mock20");
+    const mock20 = await Mock20.deploy();
+    await mock20.mint(owner.address, ethers.utils.parseEther("100"));
     // microcolonies deploy
     const MicroColonies = await ethers.getContractFactory("MicroColonies");
     const microColonies = await MicroColonies.deploy();
@@ -57,25 +62,90 @@ describe("Tournament Unit Tests", function () {
     ]);
     await tournamentFactory.deployed();
     return {
-      tournamentFactory,
+      mock20,
+      MicroColonies,
       queen,
       larva,
       worker,
       soldier,
       princess,
       disaster,
+      tournamentFactory,
+    };
+  }
+  async function createFixture() {
+    const { mock20, MicroColonies, queen, larva, worker, soldier, princess, disaster, tournamentFactory } = await loadFixture(deployFixture);
+    const [owner, addr1, addr2] = await ethers.getSigners();
+    const now = Math.floor(Date.now() / 1000).toString();
+    const epoch = 21600;
+    await tournamentFactory.createTournament("Title", [owner.address, addr1.address, addr2.address], 0, mock20.address, epoch, now);
+    const tournamentAddr = (await tournamentFactory.getTournaments())[0];
+    const Tournament = await ethers.getContractFactory("Tournament");
+    const tournament = Tournament.attach(tournamentAddr);
+    const tournamentContracts = await tournament.contracts();
+    const microColoniesAddr = tournamentContracts.microColonies;
+    const microColonies = MicroColonies.attach(microColoniesAddr);
+    return {
+      mock20,
+      microColonies,
+      queen,
+      larva,
+      worker,
+      soldier,
+      princess,
+      disaster,
+      tournament,
+      owner,
+      addr1,
+      addr2,
     };
   }
 
-  describe("Free Tournament Test", function () {
-    it("Should create tournament", async function () {
-      const { tournamentFactory } = await loadFixture(deployFixture);
+  describe("Tournament creation", function () {
+    it("Should create a tournament with free entrance", async function () {
+      const { tournamentFactory, mock20 } = await loadFixture(deployFixture);
       const [owner, addr1, addr2] = await ethers.getSigners();
       const now = Math.floor(Date.now() / 1000).toString();
       const epoch = 21600;
-      await tournamentFactory.createTournament("Title", [owner.address, addr1.address, addr2.address], 0, takezo, epoch, now);
+      await tournamentFactory.createTournament("Title", [owner.address, addr1.address, addr2.address], 0, mock20.address, epoch, now);
       const tournaments = await tournamentFactory.getTournaments();
       expect(tournaments.length).to.equal(1);
+    });
+    it("Should enter tournament with pack(0)", async function () {
+      const { tournament, microColonies, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(0)", 0);
+      const capacity = await microColonies.capacity(owner.address);
+      expect(capacity).to.equal(20);
+      const nested = await microColonies.nested(owner.address);
+      expect(nested).to.equal(20);
+    });
+    it("Should enter tournament with pack(1)", async function () {
+      const { tournament, microColonies, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(1)", 1);
+      const capacity = await microColonies.capacity(owner.address);
+      expect(capacity).to.equal(20);
+      const nested = await microColonies.nested(owner.address);
+      expect(nested).to.equal(16);
+      const all_princesses = await microColonies.getUserIds(owner.address, 5, false);
+      expect(all_princesses.length).to.equal(1);
+      expect(all_princesses[0]).to.equal(0);
+      const available_princesses = await microColonies.getUserIds(owner.address, 5, true);
+      expect(available_princesses.length).to.equal(1);
+      expect(available_princesses[0]).to.equal(0);
+    });
+    it("Should enter tournament with pack(2)", async function () {
+      const { tournament, microColonies, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(1)", 2);
+      const capacity = await microColonies.capacity(owner.address);
+      expect(capacity).to.equal(20);
+      const nested = await microColonies.nested(owner.address);
+      expect(nested).to.equal(11);
+      const all_queens = await microColonies.getUserIds(owner.address, 0, false);
+      expect(all_queens.length).to.equal(1);
+      expect(all_queens[0]).to.equal(0);
+      const available_queens = await microColonies.getUserIds(owner.address, 0, true);
+      expect(available_queens.length).to.equal(1);
+      expect(available_queens[0]).to.equal(0);
     });
   });
 
