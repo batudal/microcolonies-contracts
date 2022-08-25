@@ -117,7 +117,15 @@ describe("Tournament Tests", function () {
       const capacity = await microColonies.capacity(owner.address);
       expect(capacity).to.equal(20);
       const nested = await microColonies.nested(owner.address);
-      expect(nested).to.equal(20);
+      expect(nested).to.equal(0);
+      const all_larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(all_larvae.length).to.equal(20);
+      expect(all_larvae[0]).to.equal(0);
+      expect(all_larvae[19]).to.equal(19);
+      const available_larvae = await microColonies.getUserIds(owner.address, 1, true);
+      expect(available_larvae.length).to.equal(20);
+      expect(available_larvae[0]).to.equal(0);
+      expect(available_larvae[19]).to.equal(19);
     });
     it("Should enter tournament with pack(1)", async function () {
       const { tournament, microColonies, owner } = await loadFixture(createFixture);
@@ -125,13 +133,21 @@ describe("Tournament Tests", function () {
       const capacity = await microColonies.capacity(owner.address);
       expect(capacity).to.equal(20);
       const nested = await microColonies.nested(owner.address);
-      expect(nested).to.equal(16);
+      expect(nested).to.equal(1);
       const all_princesses = await microColonies.getUserIds(owner.address, 5, false);
       expect(all_princesses.length).to.equal(1);
       expect(all_princesses[0]).to.equal(0);
       const available_princesses = await microColonies.getUserIds(owner.address, 5, true);
       expect(available_princesses.length).to.equal(1);
       expect(available_princesses[0]).to.equal(0);
+      const all_larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(all_larvae.length).to.equal(15);
+      expect(all_larvae[0]).to.equal(0);
+      expect(all_larvae[14]).to.equal(14);
+      const available_larvae = await microColonies.getUserIds(owner.address, 1, true);
+      expect(available_larvae.length).to.equal(15);
+      expect(available_larvae[0]).to.equal(0);
+      expect(available_larvae[14]).to.equal(14);
     });
     it("Should enter tournament with pack(2)", async function () {
       const { tournament, microColonies, owner } = await loadFixture(createFixture);
@@ -139,19 +155,21 @@ describe("Tournament Tests", function () {
       const capacity = await microColonies.capacity(owner.address);
       expect(capacity).to.equal(20);
       const nested = await microColonies.nested(owner.address);
-      expect(nested).to.equal(11);
+      expect(nested).to.equal(1);
       const all_queens = await microColonies.getUserIds(owner.address, 0, false);
       expect(all_queens.length).to.equal(1);
       expect(all_queens[0]).to.equal(0);
       const available_queens = await microColonies.getUserIds(owner.address, 0, true);
       expect(available_queens.length).to.equal(1);
       expect(available_queens[0]).to.equal(0);
+      const all_larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(all_larvae.length).to.equal(10);
+      expect(all_larvae[0]).to.equal(0);
+      expect(all_larvae[9]).to.equal(9);
+      const available_larvae = await microColonies.getUserIds(owner.address, 1, true);
+      expect(available_larvae.length).to.equal(10);
+      expect(available_larvae[0]).to.equal(0);
+      expect(available_larvae[9]).to.equal(9);
     });
   });
-
-  // describe("", function () {
-  //   describe("", function () {
-  //     it("", async function () {});
-  //   });
-  // });
 });

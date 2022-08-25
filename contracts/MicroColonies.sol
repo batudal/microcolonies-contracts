@@ -174,7 +174,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     ) public view returns (uint256[] memory ids) {
         ids = new uint256[](getLength(_user, _type, true));
         uint256 total = getLength(_user, _type, false);
-        uint256 counter;
         if (_available) {
             for (uint256 i; i < total; i++) {
                 if (
@@ -194,7 +193,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                         (p[userIds[_user][_type][i]].mission.missionFinalized ||
                         p[userIds[_user][_type][i]].mission.missionTimestamp == 0))
                 ) {
-                    ids[i] = userIds[msg.sender][_type][counter];
+                    ids[i] = userIds[msg.sender][_type][i];
                 }
             }
         } else {
@@ -407,7 +406,9 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             }
             userIds[_user][_targetType].push(counters[_targetType]);
             counters[_targetType]++;
-            nested[_user]++;
+            if (_targetType != 1) {
+                nested[_user]++;
+            } 
         }
     }
 
