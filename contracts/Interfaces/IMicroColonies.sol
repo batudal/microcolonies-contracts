@@ -257,4 +257,6 @@ interface IMicroColonies {
         external
         view
         returns (Inhibition calldata);
+
+    function initialize(uint256 _epoch) external;
 }

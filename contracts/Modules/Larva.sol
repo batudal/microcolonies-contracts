@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "../../Interfaces/IMicroColonies.sol";
-import "../../Interfaces/ITournament.sol";
+import "../Interfaces/IMicroColonies.sol";
+import "../Interfaces/ITournament.sol";
 
 contract Larva is Initializable {
     IMicroColonies private micro;

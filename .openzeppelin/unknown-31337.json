@@ -1,0 +1,95 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+    "txHash": "0xfa74de1a4c7a9e8cee9ed17743b2338666d149e33097752d1db9c60000016ba0"
+  },
+  "proxies": [
+    {
+      "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+      "txHash": "0x961f828616c8742a8d28df24a1413cdf3869f8dcf3265224d03b076ae482d7e5",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "1234d27d935e6099b8568693ebf28078b682dcd99f1e854270dc11481af8f739": {
+      "address": "0x9A676e781A523b5d0C0e43731313A708CB607508",
+      "txHash": "0x65b5e97b046f5e38331c0902692098b3a194fafd600537154ccef374b7812162",
+      "layout": {
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "tournaments",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_contract(Tournament)1421)dyn_storage",
+            "contract": "TournamentFactory",
+            "src": "contracts/TournamentFactory.sol:9"
+          },
+          {
+            "label": "implementations",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "TournamentFactory",
+            "src": "contracts/TournamentFactory.sol:10"
+          },
+          {
+            "label": "userTournaments",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "TournamentFactory",
+            "src": "contracts/TournamentFactory.sol:11"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_contract(Tournament)1421)dyn_storage": {
+            "label": "contract Tournament[]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(Tournament)1421": {
+            "label": "contract Tournament",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_array(t_address)dyn_storage)": {
+            "label": "mapping(address => address[])",
+            "numberOfBytes": "32"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}

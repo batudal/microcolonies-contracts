@@ -133,9 +133,9 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     }
 
     // initializer
-    function initialize() external initializer {
+    function initialize(uint256 _epoch) external initializer {
         tournament = ITournament(msg.sender);
-        schedule.epoch = 0;
+        schedule.epoch = _epoch;
         schedule.workerFarm = 1;
         schedule.workerBuild = 5;
         schedule.conversion = 1;
@@ -146,13 +146,13 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         schedule.incubation = 1;
         schedule.queenPeriod = 1;
         schedule.lollipopDuration = 1;
-        tariff.larvaPortion = 0;
-        tariff.queenPortion = 0;
-        tariff.queenUpgrade = 0;
-        tariff.conversion = 0;
-        tariff.zombieHarvest = 0;
-        tariff.farmReward = 0;
-        tariff.buildReward = 0;
+        tariff.larvaPortion = 400;
+        tariff.queenPortion = 240;
+        tariff.queenUpgrade = 1000;
+        tariff.conversion = 100;
+        tariff.zombieHarvest = 400;
+        tariff.farmReward = 80;
+        tariff.buildReward = 5;
         nonce = 42;
     }
 
