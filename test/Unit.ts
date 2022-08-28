@@ -1,9 +1,10 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import { ethers, upgrades } from "hardhat";
+import { ethers, upgrades, network } from "hardhat";
 
 const takezo = "0xfB1C2FF46962B452C1731d44F0789bFb3607e63f";
+const epoch = 21600;
 
 describe("Tournament Tests", function () {
   async function deployFixture() {
@@ -64,27 +65,31 @@ describe("Tournament Tests", function () {
     return {
       mock20,
       MicroColonies,
-      queen,
-      larva,
-      worker,
-      soldier,
-      princess,
-      disaster,
+      Queen,
+      Larva,
+      Worker,
+      Soldier,
+      Princess,
+      Disaster,
       tournamentFactory,
     };
   }
   async function createFixture() {
-    const { mock20, MicroColonies, queen, larva, worker, soldier, princess, disaster, tournamentFactory } = await loadFixture(deployFixture);
+    const { mock20, MicroColonies, Queen, Larva, Worker, Soldier, Princess, Disaster, tournamentFactory } = await loadFixture(deployFixture);
     const [owner, addr1, addr2] = await ethers.getSigners();
     const now = Math.floor(Date.now() / 1000).toString();
-    const epoch = 21600;
     await tournamentFactory.createTournament("Title", [owner.address, addr1.address, addr2.address], 0, mock20.address, epoch, now);
     const tournamentAddr = (await tournamentFactory.getTournaments())[0];
     const Tournament = await ethers.getContractFactory("Tournament");
     const tournament = Tournament.attach(tournamentAddr);
     const tournamentContracts = await tournament.contracts();
-    const microColoniesAddr = tournamentContracts.microColonies;
-    const microColonies = MicroColonies.attach(microColoniesAddr);
+    const microColonies = MicroColonies.attach(tournamentContracts.microColonies);
+    const queen = Queen.attach(tournamentContracts.queen);
+    const larva = Larva.attach(tournamentContracts.larva);
+    const worker = Worker.attach(tournamentContracts.worker);
+    const soldier = Soldier.attach(tournamentContracts.soldier);
+    const princess = Princess.attach(tournamentContracts.princess);
+    const disaster = Disaster.attach(tournamentContracts.disaster);
     return {
       mock20,
       microColonies,
@@ -101,7 +106,7 @@ describe("Tournament Tests", function () {
     };
   }
 
-  describe("Tournament creation", function () {
+  describe("Tournament Unit Tests", function () {
     it("Should create a tournament with free entrance", async function () {
       const { tournamentFactory, mock20 } = await loadFixture(deployFixture);
       const [owner, addr1, addr2] = await ethers.getSigners();
@@ -170,6 +175,63 @@ describe("Tournament Tests", function () {
       expect(available_larvae.length).to.equal(10);
       expect(available_larvae[0]).to.equal(0);
       expect(available_larvae[9]).to.equal(9);
+    });
+  });
+  describe("Larva Unit Tests", function () {
+    it("Should deploy incubate mission (0/20 fed)", async () => {
+      const { tournament, microColonies, larva, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(0)", 0);
+      await larva.incubate(20, 0);
+      const missions = await microColonies.getUserMissions(owner.address, 1);
+      expect(missions.length).to.equal(1);
+      const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
+      expect(missionIds.length).to.equal(20);
+    });
+    it("Should hatch (0/20 fed)", async () => {
+      const { tournament, microColonies, larva, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(0)", 0);
+      await larva.incubate(20, 0);
+      const missions = await microColonies.getUserMissions(owner.address, 1);
+      expect(missions.length).to.equal(1);
+      const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
+      expect(missionIds.length).to.equal(20);
+      await network.provider.send("evm_increaseTime", [epoch + 10]);
+      await network.provider.send("evm_mine");
+      expect(await microColonies.nested(owner.address)).to.equal(0);
+      await larva.hatch(missions[0]);
+      expect(await microColonies.nested(owner.address)).to.equal(20);
+    });
+    it("Should hatch (10/20 fed)", async () => {
+      const { tournament, microColonies, larva, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(0)", 0);
+      expect(await microColonies.funghiBalance(owner.address)).to.equal("100000");
+      await larva.incubate(20, 10);
+      expect(await microColonies.funghiBalance(owner.address)).to.equal("96000");
+      const missions = await microColonies.getUserMissions(owner.address, 1);
+      expect(missions.length).to.equal(1);
+      const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
+      expect(missionIds.length).to.equal(20);
+      await network.provider.send("evm_increaseTime", [epoch + 10]);
+      await network.provider.send("evm_mine");
+      expect(await microColonies.nested(owner.address)).to.equal(0);
+      await larva.hatch(missions[0]);
+      expect(await microColonies.nested(owner.address)).to.equal(20);
+    });
+    it("Should hatch (20/20 fed)", async () => {
+      const { tournament, microColonies, larva, owner } = await loadFixture(createFixture);
+      await tournament.enterTournament("takezo_pack(0)", 0);
+      expect(await microColonies.funghiBalance(owner.address)).to.equal("100000");
+      await larva.incubate(20, 20);
+      expect(await microColonies.funghiBalance(owner.address)).to.equal("92000");
+      const missions = await microColonies.getUserMissions(owner.address, 1);
+      expect(missions.length).to.equal(1);
+      const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
+      expect(missionIds.length).to.equal(20);
+      await network.provider.send("evm_increaseTime", [epoch + 10]);
+      await network.provider.send("evm_mine");
+      expect(await microColonies.nested(owner.address)).to.equal(0);
+      await larva.hatch(missions[0]);
+      expect(await microColonies.nested(owner.address)).to.equal(20);
     });
   });
 });

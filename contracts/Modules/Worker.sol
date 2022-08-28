@@ -22,7 +22,7 @@ contract Worker is Initializable {
         );
         uint256 missionId = micro.createMission(msg.sender, 2, 2);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(2, 2, 2, ids[i], missionId);
+            micro.addToMission(msg.sender, 2, 2, 2, ids[i], missionId);
         }
         micro.earnXp(2, 2, msg.sender, _amount);
     }
@@ -50,7 +50,7 @@ contract Worker is Initializable {
         require(_amount <= ids.length, "Not enough workers.");
         uint256 missionId = micro.createMission(msg.sender, 2, 2);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(2, 2, 0, ids[i], missionId);
+            micro.addToMission(msg.sender, 2, 2, 0, ids[i], missionId);
         }
         micro.earnXp(2, 2, msg.sender, _amount);
     }
@@ -87,7 +87,7 @@ contract Worker is Initializable {
         require(_amount <= ids.length, "Not enough workers.");
         uint256 missionId = micro.createMission(msg.sender, 2, 2);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(2, 2, 1, ids[i], missionId);
+            micro.addToMission(msg.sender, 2, 2, 1, ids[i], missionId);
         }
         micro.earnXp(2, 2, msg.sender, _amount);
     }

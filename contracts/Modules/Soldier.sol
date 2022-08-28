@@ -22,7 +22,7 @@ contract Soldier is Initializable {
         require(_amount <= ids.length, "Not enough soldiers.");
         uint256 missionId = micro.createMission(msg.sender, 3, 3);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(3, 3, 0, ids[i], missionId);
+            micro.addToMission(msg.sender, 3, 3, 0, ids[i], missionId);
         }
         micro.earnXp(3, 3, msg.sender, _amount);
     }
@@ -185,7 +185,7 @@ contract Soldier is Initializable {
         micro.earnXp(3, 3, msg.sender, _amount);
         for (uint256 i; i < ids.length; i++) {
             if (_amount > 0 && micro.s(ids[i]).hp == 0) {
-                micro.addToMission(3, 3, 1, ids[i], missionId);
+                micro.addToMission(msg.sender, 3, 3, 1, ids[i], missionId);
                 _amount--;
             }
         }
@@ -221,7 +221,7 @@ contract Soldier is Initializable {
         micro.earnXp(3, 3, msg.sender, _amount);
         for (uint256 i; i < ids.length; i++) {
             if (_amount > 0 && micro.s(ids[i]).hp == 0) {
-                micro.addToMission(3, 3, 2, ids[i], missionId);
+                micro.addToMission(msg.sender, 3, 3, 2, ids[i], missionId);
                 _amount--;
             }
         }

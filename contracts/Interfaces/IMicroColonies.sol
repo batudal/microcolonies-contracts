@@ -107,6 +107,7 @@ interface IMicroColonies {
     ) external returns (uint256 missionId);
 
     function addToMission(
+        address _user,
         uint256 _type,
         uint256 _targetType,
         uint256 _missionType,

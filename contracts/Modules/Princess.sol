@@ -24,10 +24,10 @@ contract Princess is Initializable {
         uint256 missionId = micro.createMission(msg.sender, 5, 5);
         uint256 maleMissionId = micro.createMission(msg.sender, 4, 4);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(5, 5, 0, ids[i], missionId);
+            micro.addToMission(msg.sender, 5, 5, 0, ids[i], missionId);
         }
         for (uint256 i; i < maleIds.length; i++) {
-            micro.addToMission(5, 4, 0, maleIds[i], maleMissionId);
+            micro.addToMission(msg.sender, 5, 4, 0, maleIds[i], maleMissionId);
         }
         micro.earnXp(5, 5, msg.sender, _amount + maleIds.length);
         idMap[missionId] = maleMissionId;

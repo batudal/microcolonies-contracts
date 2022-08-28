@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Interfaces/ITournament.sol";
 import "./Helpers/Quick.sol";
 import "hardhat/console.sol";
+
 contract MicroColonies is Initializable, OwnableUpgradeable {
     Schedule public schedule;
     Tariff public tariff;
@@ -80,6 +81,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     /// @dev user => QLWSMP => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
     mapping(address => mapping(uint256 => uint256[])) public userMissions;
+    mapping(address => mapping(uint256 => mapping(uint256 => uint256[])))
+        public missionIds;
     mapping(address => Lolli) public lollipops;
     mapping(address => uint256) public funghiBalance;
     mapping(address => uint256) public feromonBalance;
@@ -150,6 +153,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         nonce = 42;
     }
 
+    // admin fxns
     function setAccess(
         uint256 _moduleId,
         address _moduleAddr,
@@ -179,21 +183,36 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 if (
                     (_type == 1 &&
                         (l[userIds[_user][_type][i]].mission.missionFinalized ||
-                        l[userIds[_user][_type][i]].mission.missionTimestamp == 0)) ||
+                            l[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
                     (_type == 2 &&
                         (w[userIds[_user][_type][i]].mission.missionFinalized ||
-                        w[userIds[_user][_type][i]].mission.missionTimestamp == 0)) ||
+                            w[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
                     (_type == 3 &&
                         (s[userIds[_user][_type][i]].mission.missionFinalized ||
-                        s[userIds[_user][_type][i]].mission.missionTimestamp == 0)) ||
+                            s[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
                     (_type == 4 &&
-                        (m[userIds[_user][_type][i]].mission.missionFinalized||
-                        m[userIds[_user][_type][i]].mission.missionTimestamp == 0)) ||
+                        (m[userIds[_user][_type][i]].mission.missionFinalized ||
+                            m[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
                     (_type == 5 &&
                         (p[userIds[_user][_type][i]].mission.missionFinalized ||
-                        p[userIds[_user][_type][i]].mission.missionTimestamp == 0))
+                            p[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0))
                 ) {
-                    ids[i] = userIds[msg.sender][_type][i];
+                    ids[i] = userIds[_user][_type][i];
                 }
             }
         } else {
@@ -213,31 +232,43 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                     (_type == 1 &&
                         (!l[userIds[_user][_type][i]]
                             .mission
-                            .missionFinalized && l[userIds[_user][_type][i]]
-                            .mission
-                            .missionTimestamp != 0)) ||
+                            .missionFinalized &&
+                            l[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp !=
+                            0)) ||
                     (_type == 2 &&
                         (!w[userIds[_user][_type][i]]
                             .mission
-                            .missionFinalized && w[userIds[_user][_type][i]]
-                            .mission
-                            .missionTimestamp != 0)) ||
+                            .missionFinalized &&
+                            w[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp !=
+                            0)) ||
                     (_type == 3 &&
                         (!s[userIds[_user][_type][i]]
                             .mission
-                            .missionFinalized && s[userIds[_user][_type][i]]
-                            .mission
-                            .missionTimestamp != 0)) ||
+                            .missionFinalized &&
+                            s[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp !=
+                            0)) ||
                     (_type == 4 &&
                         (!m[userIds[_user][_type][i]]
                             .mission
-                            .missionFinalized && m[userIds[_user][_type][i]]
-                            .mission
-                            .missionTimestamp != 0)) ||
+                            .missionFinalized &&
+                            m[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp !=
+                            0)) ||
                     (_type == 5 &&
-                        (!p[userIds[_user][_type][i]].mission.missionFinalized && p[userIds[_user][_type][i]]
+                        (!p[userIds[_user][_type][i]]
                             .mission
-                            .missionTimestamp != 0))
+                            .missionFinalized &&
+                            p[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp !=
+                            0))
                 ) {
                     length--;
                 }
@@ -257,49 +288,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         address _user,
         uint256 _type,
         uint256 _id
-    ) public view returns (uint256[] memory ids) {
-        uint256 length;
-        for (uint256 i; i < userMissions[_user][_type].length; i++) {
-            if (
-                (_type == 1 &&
-                    l[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 2 &&
-                    w[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 3 &&
-                    s[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 4 &&
-                    m[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 5 &&
-                    p[userMissions[_user][_type][i]].mission.missionId == _id)
-            ) {
-                length++;
-            }
-        }
-        ids = new uint256[](length);
-        for (uint256 i; i < userMissions[_user][_type].length; i++) {
-            if (
-                (_type == 1 &&
-                    l[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 2 &&
-                    w[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 3 &&
-                    s[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 4 &&
-                    m[userMissions[_user][_type][i]].mission.missionId ==
-                    _id) ||
-                (_type == 5 &&
-                    p[userMissions[_user][_type][i]].mission.missionId == _id)
-            ) {
-                ids[i] = userMissions[_user][_type][i];
-            }
-        }
+    ) public view returns (uint256[] memory) {
+        return missionIds[_user][_type][_id];
     }
 
     function isBoosted(
@@ -330,7 +320,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
 
     function openPack(address _user, uint256 _pack) public {
         require(msg.sender == address(tournament), "Only tournament can call.");
-        increaseCapacity(0,0,_user,20);
+        increaseCapacity(0, 0, _user, 20);
         if (_pack == 0) {
             print(_user, 1, 1, 20);
         } else if (_pack == 1) {
@@ -340,6 +330,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             print(_user, 0, 1, 10);
             print(_user, 0, 0, 1);
         }
+        funghiBalance[_user] = 100000; // remove at production
     }
 
     function useLollipop() public {
@@ -348,6 +339,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         lollipops[msg.sender].timestamp = block.timestamp;
     }
 
+    // princess + male
     function matingBoost(
         address _user,
         uint256 _type,
@@ -367,17 +359,34 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         inhibitions[_targetType].deploy = _deploy;
     }
 
+    function findIndex(
+        address _user,
+        uint256 _type,
+        uint256 _id
+    ) private view returns (uint256 index) {
+        for (uint256 i; i < userIds[_user][_type].length; i++) {
+            if (userIds[_user][_type][i] == _id) {
+                index = i;
+            }
+        }
+    }
+
     function kill(
         address _user,
         uint256 _type,
         uint256 _targetType,
         uint256 _id
     ) public checkAccess(_type, _targetType) {
-        userIds[_user][_type][_id] = userIds[_user][_type][
-            userIds[_user][_type].length - 1
-        ];
-        userIds[_user][_type].pop();
-        nested[_user]--;
+        uint256 index = findIndex(_user, _targetType, _id);
+        if (userIds[_user][_targetType].length > 1) {
+            userIds[_user][_targetType][index] = userIds[_user][_targetType][
+                userIds[_user][_targetType].length - 1
+            ];
+        }
+        userIds[_user][_targetType].pop();
+        if (_targetType != 1) {
+            nested[_user]--;
+        }
     }
 
     function print(
@@ -408,7 +417,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             counters[_targetType]++;
             if (_targetType != 1) {
                 nested[_user]++;
-            } 
+            }
         }
     }
 
@@ -417,11 +426,16 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _type,
         uint256 _targetType
     ) public checkAccess(_type, _targetType) returns (uint256 highest) {
-        highest = Quicksort.getHighest(userMissions[_user][_type]) + 1;
-        userMissions[_user][_type].push(highest);
+        if (userMissions[_user][_type].length > 0) {
+            highest = Quicksort.getHighest(userMissions[_user][_type]) + 1;
+            userMissions[_user][_type].push(highest);
+        } else {
+            userMissions[_user][_type].push(0);
+        }
     }
 
     function addToMission(
+        address _user,
         uint256 _type,
         uint256 _targetType,
         uint256 _missionType,
@@ -445,6 +459,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         } else if (_type == 5) {
             p[_id].mission = mission;
         }
+        missionIds[_user][_type][_missionId].push(_id);
     }
 
     function finalizeMission(
@@ -478,6 +493,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         feromonBalance[_user] += _amount;
     }
 
+    // worker farm + zombie harvest
     function earnFunghi(
         uint256 _type,
         uint256 _targetType,
@@ -505,6 +521,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         feromonBalance[_user] -= _amount;
     }
 
+    // queen-only
     function resetQueen(
         uint256 _type,
         uint256 _targetType,
@@ -521,7 +538,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _amount
     ) public checkAccess(_type, _targetType) {
         capacity[_user] += _amount;
-
     }
 
     function decreaseCapacity(
@@ -533,6 +549,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         capacity[_user] -= _amount;
     }
 
+    // worker + soldier
     function decreaseHP(
         uint256 _type,
         uint256 _targetType,
@@ -545,6 +562,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         }
     }
 
+    // queen-only
     function addEggs(
         uint256 _type,
         uint256 _targetType,
@@ -554,6 +572,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         q[_id].eggs += _amount;
     }
 
+    // soldier-only
     function healSoldier(
         uint256 _type,
         uint256 _targetType,
