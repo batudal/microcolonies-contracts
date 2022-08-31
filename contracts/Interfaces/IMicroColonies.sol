@@ -30,7 +30,6 @@ struct Q {
     uint256 level;
     uint256 eggs;
     uint256 timestamp;
-    bool inNest;
 }
 struct L {
     Mission mission; // missionType (0-unfed, 1-fed)
@@ -38,21 +37,17 @@ struct L {
 struct W {
     uint8 hp;
     Mission mission; // missionType (0-farm, 1-build, 2-conversion)
-    bool inNest;
 }
 struct S {
     uint256 hp; // 4..2 hp 1 zombie 0 null
     Mission mission; // missionType (0-scout, 1-harvest, 2-defend)
     uint256 damageTimestamp;
-    bool inNest;
 }
 struct M {
     Mission mission;
-    bool inNest;
 }
 struct P {
     Mission mission;
-    bool inNest;
 }
 struct Lolli {
     bool used;

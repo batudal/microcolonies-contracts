@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
+import "hardhat/console.sol";
 
 contract Worker is Initializable {
     IMicroColonies private micro;
@@ -58,7 +59,6 @@ contract Worker is Initializable {
     function claimFarmed(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
         uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
-        require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
             micro.w(ids[0]).mission.missionTimestamp +
                 micro.schedule().workerFarm /
@@ -121,13 +121,14 @@ contract Worker is Initializable {
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
         uint256 id = micro.getMissionIds(_user, 2, _id)[0];
-        return
-            (micro.w(id).mission.missionTimestamp >
-                micro.lollipops(_user).timestamp &&
-                micro.w(id).mission.missionTimestamp <=
-                (micro.lollipops(_user).timestamp +
-                    micro.schedule().lollipopDuration))
-                ? true
-                : false;
+        return false;
+        // return
+        //     (micro.w(id).mission.missionTimestamp >
+        //         micro.lollipops(_user).timestamp &&
+        //         micro.w(id).mission.missionTimestamp <=
+        //         (micro.lollipops(_user).timestamp +
+        //             micro.schedule().lollipopDuration))
+        //         ? true
+        //         : false;
     }
 }

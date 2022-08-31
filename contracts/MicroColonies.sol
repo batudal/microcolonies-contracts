@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Interfaces/ITournament.sol";
 import "./Helpers/Quick.sol";
-import "hardhat/console.sol";
 
 contract MicroColonies is Initializable, OwnableUpgradeable {
     Schedule public schedule;
@@ -146,11 +145,11 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.larvaPortion = 400;
         tariff.queenPortion = 240;
         tariff.queenUpgrade = 1000;
-        tariff.conversion = 100;
+        tariff.conversion = 10; // 100 in production!
         tariff.zombieHarvest = 400;
         tariff.farmReward = 80;
         tariff.buildReward = 5;
-        nonce = 42;
+        nonce = 425252;
     }
 
     // admin fxns
