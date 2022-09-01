@@ -2,19 +2,19 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
-    "txHash": "0x921dd173688f56b9bfba589b7196ce9c92a7f3443602f8f120def21eada314ce"
+    "txHash": "0x818a2e41b9b410fd12d7aaf0b0a9373f03b50a02f29bdbc68f1d2fc7cdf9d14f"
   },
   "proxies": [
     {
       "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
-      "txHash": "0xf7b59e1d8bc786e72df3e433cc1f2d941ef43db2046400626d57250826ebd09a",
+      "txHash": "0x88b26693662c8fc2b086774bc000be1f9550c37373d813b9f43a63f367e0ded7",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "b002e35c19310fbda3f3a19ed86b52500c5e8ac23cce1badeca766fc96e7faa0": {
+    "bf27ec3f946fa204aa1c43c1137ef496a3792372784308f1cec754dce90d91e0": {
       "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
-      "txHash": "0x7e1a8758396a633f9bf570ae19b3060a5b548580c648158579076cee3fd6220d",
+      "txHash": "0xad9740decc5ef363a956b8536aa4c096b2400e125181c8a1f4500f2780c6e535",
       "layout": {
         "storage": [
           {
@@ -38,7 +38,7 @@
             "label": "tournaments",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(Tournament)6309)dyn_storage",
+            "type": "t_array(t_contract(Tournament)8505)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:9"
           },
@@ -68,7 +68,7 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_contract(Tournament)6309)dyn_storage": {
+          "t_array(t_contract(Tournament)8505)dyn_storage": {
             "label": "contract Tournament[]",
             "numberOfBytes": "32"
           },
@@ -76,7 +76,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(Tournament)6309": {
+          "t_contract(Tournament)8505": {
             "label": "contract Tournament",
             "numberOfBytes": "20"
           },

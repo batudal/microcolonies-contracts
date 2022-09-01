@@ -129,8 +129,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     // }
 
     // initializer
-    function initialize(uint256 _epoch) external initializer {
+    function initialize(uint256 _epoch, address[] calldata _participants)
+        external
+        initializer
+    {
         tournament = ITournament(msg.sender);
+        participants = _participants;
         schedule.epoch = _epoch;
         schedule.workerFarm = 1;
         schedule.workerBuild = 5;
@@ -149,7 +153,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.zombieHarvest = 400;
         tariff.farmReward = 80;
         tariff.buildReward = 5;
-        nonce = 425252;
+        nonce = 42;
     }
 
     // admin fxns
@@ -163,6 +167,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     }
 
     // view fxn
+    function getParticipants()
+        public
+        view
+        returns (address[] memory participants_)
+    {
+        participants_ = participants;
+    }
+
     function getUserSpeed(address _user) public view returns (uint256 speed) {
         speed = lollipops[_user].timestamp + schedule.lollipopDuration >
             block.timestamp
@@ -215,7 +227,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 }
             }
         } else {
-            ids = userIds[msg.sender][_type];
+            ids = userIds[_user][_type];
         }
     }
 

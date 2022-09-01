@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
 import "../Interfaces/ITournament.sol";
 import "../Helpers/Quick.sol";
+import "hardhat/console.sol";
 
 contract Soldier is Initializable {
     IMicroColonies private micro;
@@ -17,6 +18,7 @@ contract Soldier is Initializable {
         nonce = 42;
     }
 
+    // integrate infection
     function scout(uint256 _amount) public isSafe(true) {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
         require(_amount <= ids.length, "Not enough soldiers.");
@@ -33,10 +35,11 @@ contract Soldier is Initializable {
         returns (address[] memory participants)
     {
         uint256 counter;
-        participants = new address[](micro.participants().length - 1);
-        for (uint256 i = 0; i < micro.participants().length; i++) {
-            if (micro.participants()[i] != _user) {
-                participants[counter] = micro.participants()[i];
+        address[] memory allParticipants = micro.getParticipants();
+        participants = new address[](allParticipants.length - 1);
+        for (uint256 i = 0; i < allParticipants.length; i++) {
+            if (allParticipants[i] != _user) {
+                participants[counter] = allParticipants[i];
                 counter++;
             }
         }
@@ -51,7 +54,7 @@ contract Soldier is Initializable {
     }
 
     function reveal(uint256 _id) public view returns (address target) {
-        uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
+        uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
         uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(
             micro.s(ids[0]).mission.missionTimestamp +
@@ -110,59 +113,65 @@ contract Soldier is Initializable {
             true
         );
         uint256[] memory targetLarvae = getIncubating(reveal(_id));
-
-        (uint256 prize, uint256 bonus) = battle(
+        require(targetLarvae.length > 0, "Target has no larvae.");
+        uint256 reward = battle(
             soldiers.length,
             targetSoldiers.length,
             targetLarvae.length
         );
-        if (prize == 0 && bonus == 0) {
+        if (reward == 0) {
             return ();
         }
-        for (uint256 i; i < prize + bonus; i++) {
+        for (uint256 i; i < reward; i++) {
             micro.kill(reveal(_id), 3, 1, targetLarvae[i]);
         }
+        micro.print(msg.sender, 3, 1, reward);
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
 
+    // integrate zombies
     function battle(
         uint256 attackerSoldierCount,
         uint256 targetSoldierCount,
         uint256 targetLarvaeCount
-    ) public returns (uint256 prize, uint256 bonus) {
-        uint256 rollCount = attackerSoldierCount > targetLarvaeCount
-            ? targetLarvaeCount
+    ) public returns (uint256 reward) {
+        uint256 rollCount = attackerSoldierCount > targetSoldierCount
+            ? targetSoldierCount
             : attackerSoldierCount;
         uint256[] memory targetRolls = new uint256[](rollCount);
         uint256[] memory attackerRolls = new uint256[](rollCount);
+        for (uint256 j; j < rollCount; j++) {
+            nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
+            targetRolls[j] = nonce % 100;
+            nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
+            attackerRolls[j] = nonce % 100;
+        }
         targetRolls = Quicksort.getDescending(targetRolls);
         attackerRolls = Quicksort.getDescending(attackerRolls);
         uint256 attackerWins = 0;
         uint256 defenderWins = 0;
         for (uint256 i = 0; i < rollCount; i++) {
+            // do rolls here
             if (attackerRolls[i] > targetRolls[i]) {
                 attackerWins++;
             } else {
                 defenderWins++;
             }
         }
-        if (attackerWins > defenderWins) {
-            prize = attackerWins - defenderWins;
-        } else {
-            prize = 0;
-        }
+        reward += attackerWins;
         if (attackerSoldierCount > targetSoldierCount) {
             uint256 remainingAttacks = attackerSoldierCount -
                 targetSoldierCount;
             for (uint256 i = 0; i < remainingAttacks; i++) {
-                uint256 chance = uint256(
-                    keccak256(abi.encodePacked(msg.sender, nonce))
-                ) % 100;
-                nonce++;
-                if (chance < 80) {
-                    bonus++;
+                nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
+                if (nonce % 100 < 100) {
+                    // 80 in production
+                    reward++;
                 }
             }
+        }
+        if (targetLarvaeCount < reward) {
+            reward = targetLarvaeCount;
         }
     }
 

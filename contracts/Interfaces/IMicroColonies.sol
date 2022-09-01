@@ -218,6 +218,11 @@ interface IMicroColonies {
         view
         returns (address[] calldata participants);
 
+    function getParticipants()
+        external
+        view
+        returns (address[] memory participants_);
+
     function finalizeMission(
         address _user,
         uint256 _type,
@@ -254,5 +259,6 @@ interface IMicroColonies {
         view
         returns (Inhibition calldata);
 
-    function initialize(uint256 _epoch) external;
+    function initialize(uint256 _epoch, address[] calldata _participants)
+        external;
 }

@@ -52,7 +52,10 @@ contract Tournament is Initializable {
             participants.push(_participants[i]);
         }
         contracts.microColonies = Clones.clone(_implementations[0]);
-        IMicroColonies(contracts.microColonies).initialize(_epochDuration);
+        IMicroColonies(contracts.microColonies).initialize(
+            _epochDuration,
+            _participants
+        );
         contracts.queen = Clones.clone(_implementations[1]);
         IModule(contracts.queen).initialize(contracts.microColonies);
         contracts.larva = Clones.clone(_implementations[2]);
@@ -83,7 +86,7 @@ contract Tournament is Initializable {
         onlyParticipant
     {
         require(
-            IERC20(currencyToken).balanceOf(msg.sender) > entranceFee,
+            IERC20(currencyToken).balanceOf(msg.sender) >= entranceFee,
             "You don't have enough tokens."
         );
         require(block.timestamp >= startDate, "Tournament not started.");
