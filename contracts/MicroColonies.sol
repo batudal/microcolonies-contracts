@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Interfaces/ITournament.sol";
-import "./Helpers/Quick.sol";
 
 contract MicroColonies is Initializable, OwnableUpgradeable {
     Schedule public schedule;
@@ -420,7 +419,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             } else if (_targetType == 4) {
                 m[counters[4]] = M(Mission(0, 0, 0, false));
             } else if (_targetType == 3) {
-                s[counters[3]] = S(4, Mission(0, 0, 0, false), 0);
+                s[counters[3]] = S(3, Mission(0, 0, 0, false), 0);
             } else if (_targetType == 2) {
                 w[counters[2]] = W(5, Mission(0, 0, 0, false));
             }
@@ -438,11 +437,16 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _targetType
     ) public checkAccess(_type, _targetType) returns (uint256 highest) {
         if (userMissions[_user][_type].length > 0) {
-            highest = Quicksort.getHighest(userMissions[_user][_type]) + 1;
-            userMissions[_user][_type].push(highest);
+            highest =
+                userMissions[_user][_type][
+                    userMissions[_user][_type].length - 1
+                ] +
+                1;
         } else {
-            userMissions[_user][_type].push(0);
+            highest = 1;
         }
+
+        userMissions[_user][_type].push(highest);
     }
 
     function addToMission(
@@ -493,6 +497,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 p[ids[i]].mission.missionFinalized = true;
             }
         }
+        // for (uint256 i; i < userMissions[_user][_targetType].length; i++) {
+        //     if (userMissions[_user][_targetType][i] == _id) {
+        //         userMissions[_user][_targetType][i] = userMissions[_user][
+        //             _targetType
+        //         ][userMissions[_user][_targetType].length - 1];
+        //         userMissions[_user][_targetType].pop();
+        //     }
+        // }
     }
 
     function earnXp(
@@ -567,8 +579,10 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _id
     ) public checkAccess(_type, _targetType) {
         if (_targetType == 2) {
+            require(w[_id].hp > 0, "Worker is dead already.");
             w[_id].hp--;
         } else if (_targetType == 3) {
+            require(s[_id].hp > 0, "Soldier is dead already.");
             s[_id].hp--;
         }
     }

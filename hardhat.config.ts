@@ -14,14 +14,20 @@ const config: HardhatUserConfig = {
     runOnCompile: false,
     strict: true,
   },
-  gasReporter: {
-    enabled: false,
-    currency: "USD",
-    token: "MATIC",
-    gasPrice: 80,
-    gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
-    coinmarketcap: process.env.COINMARKETCAP,
+  networks: {
+    devm: {
+      url: process.env.DEVM_URL || "",
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+    },
   },
+  // gasReporter: {
+  //   enabled: false,
+  //   currency: "USD",
+  //   token: "MATIC",
+  //   gasPrice: 80,
+  //   gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
+  //   coinmarketcap: process.env.COINMARKETCAP,
+  // },
   // tracer: {
   //   nameTags: {
   //     "0x0B306BF915C4d645ff596e518fAf3F9669b97016": "Tournament",

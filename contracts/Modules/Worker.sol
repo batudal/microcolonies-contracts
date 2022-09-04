@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
-import "hardhat/console.sol";
 
 contract Worker is Initializable {
     IMicroColonies private micro;
@@ -30,7 +29,7 @@ contract Worker is Initializable {
 
     function claimConverted(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
             micro.w(ids[0]).mission.missionTimestamp +
@@ -58,7 +57,7 @@ contract Worker is Initializable {
 
     function claimFarmed(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(
             micro.w(ids[0]).mission.missionTimestamp +
                 micro.schedule().workerFarm /
@@ -94,7 +93,7 @@ contract Worker is Initializable {
 
     function claimBuilt(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
-        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(ids[0]).mission.missionTimestamp != 0);
         require(
             micro.w(ids[0]).mission.missionTimestamp +

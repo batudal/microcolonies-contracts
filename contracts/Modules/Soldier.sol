@@ -5,7 +5,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
 import "../Interfaces/ITournament.sol";
 import "../Helpers/Quick.sol";
-import "hardhat/console.sol";
 
 contract Soldier is Initializable {
     IMicroColonies private micro;
@@ -18,13 +17,20 @@ contract Soldier is Initializable {
         nonce = 42;
     }
 
+    // add heal function
+
     // integrate infection
     function scout(uint256 _amount) public isSafe(true) {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
+
         require(_amount <= ids.length, "Not enough soldiers.");
         uint256 missionId = micro.createMission(msg.sender, 3, 3);
+
         for (uint256 i; i < _amount; i++) {
             micro.addToMission(msg.sender, 3, 3, 0, ids[i], missionId);
+            if (micro.s(ids[i]).hp > 0) {
+                micro.decreaseHP(3, 3, ids[i]);
+            }
         }
         micro.earnXp(3, 3, msg.sender, _amount);
     }
@@ -69,6 +75,7 @@ contract Soldier is Initializable {
         target = participants[prob];
     }
 
+    // implementation pls!
     function retreat(uint256 _id) public isSafe(false) {
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
@@ -114,11 +121,7 @@ contract Soldier is Initializable {
         );
         uint256[] memory targetLarvae = getIncubating(reveal(_id));
         require(targetLarvae.length > 0, "Target has no larvae.");
-        uint256 reward = battle(
-            soldiers.length,
-            targetSoldiers.length,
-            targetLarvae.length
-        );
+        uint256 reward = battle(soldiers, targetSoldiers, targetLarvae);
         if (reward == 0) {
             return ();
         }
@@ -131,10 +134,13 @@ contract Soldier is Initializable {
 
     // integrate zombies
     function battle(
-        uint256 attackerSoldierCount,
-        uint256 targetSoldierCount,
-        uint256 targetLarvaeCount
+        uint256[] memory attackerSoldiers,
+        uint256[] memory targetSoldiers,
+        uint256[] memory targetLarvae
     ) public returns (uint256 reward) {
+        uint256 attackerSoldierCount = attackerSoldiers.length;
+        uint256 targetSoldierCount = targetSoldiers.length;
+        uint256 targetLarvaeCount = targetLarvae.length;
         uint256 rollCount = attackerSoldierCount > targetSoldierCount
             ? targetSoldierCount
             : attackerSoldierCount;
@@ -145,17 +151,16 @@ contract Soldier is Initializable {
             targetRolls[j] = nonce % 100;
             nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
             attackerRolls[j] = nonce % 100;
+            if (micro.s(targetSoldiers[j]).hp > 0) {
+                micro.decreaseHP(3, 3, targetSoldiers[j]);
+            }
         }
         targetRolls = Quicksort.getDescending(targetRolls);
         attackerRolls = Quicksort.getDescending(attackerRolls);
         uint256 attackerWins = 0;
-        uint256 defenderWins = 0;
         for (uint256 i = 0; i < rollCount; i++) {
-            // do rolls here
             if (attackerRolls[i] > targetRolls[i]) {
                 attackerWins++;
-            } else {
-                defenderWins++;
             }
         }
         reward += attackerWins;
@@ -203,14 +208,17 @@ contract Soldier is Initializable {
     function claimHarvested(uint256 _id) public {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
         uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(micro.s(_id).mission.missionTimestamp != 0);
+        require(micro.s(ids[0]).mission.missionTimestamp != 0);
         require(
-            micro.s(_id).mission.missionTimestamp +
+            micro.s(ids[0]).mission.missionTimestamp +
                 micro.schedule().zombieHarvest /
                 speed <
                 block.timestamp
         );
-        require(!micro.w(_id).mission.missionFinalized);
+        require(
+            !micro.s(ids[0]).mission.missionFinalized,
+            "Mission already is finalized."
+        );
         for (uint256 i; i < ids.length; i++) {
             micro.kill(msg.sender, 3, 3, ids[i]);
         }

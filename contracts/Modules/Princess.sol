@@ -41,7 +41,7 @@ contract Princess is Initializable {
             4,
             idMap[_id]
         );
-        uint8 speed = isBoosted(msg.sender, ids[0]) ? 2 : 1;
+        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.p(ids[0]).mission.missionTimestamp != 0);
         require(
             micro.p(ids[0]).mission.missionTimestamp +
