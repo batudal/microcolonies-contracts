@@ -145,6 +145,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         schedule.incubation = 1;
         schedule.queenPeriod = 1;
         schedule.lollipopDuration = 1;
+        schedule.mating = 4;
         tariff.larvaPortion = 400;
         tariff.queenPortion = 240;
         tariff.queenUpgrade = 1000;
@@ -436,17 +437,17 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _type,
         uint256 _targetType
     ) public checkAccess(_type, _targetType) returns (uint256 highest) {
-        if (userMissions[_user][_type].length > 0) {
+        if (userMissions[_user][_targetType].length > 0) {
             highest =
-                userMissions[_user][_type][
-                    userMissions[_user][_type].length - 1
+                userMissions[_user][_targetType][
+                    userMissions[_user][_targetType].length - 1
                 ] +
                 1;
         } else {
             highest = 1;
         }
 
-        userMissions[_user][_type].push(highest);
+        userMissions[_user][_targetType].push(highest);
     }
 
     function addToMission(
@@ -463,18 +464,18 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             block.timestamp,
             false
         );
-        if (_type == 1) {
+        if (_targetType == 1) {
             l[_id].mission = mission;
-        } else if (_type == 2) {
+        } else if (_targetType == 2) {
             w[_id].mission = mission;
-        } else if (_type == 3) {
+        } else if (_targetType == 3) {
             s[_id].mission = mission;
-        } else if (_type == 4) {
+        } else if (_targetType == 4) {
             m[_id].mission = mission;
-        } else if (_type == 5) {
+        } else if (_targetType == 5) {
             p[_id].mission = mission;
         }
-        missionIds[_user][_type][_missionId].push(_id);
+        missionIds[_user][_targetType][_missionId].push(_id);
     }
 
     function finalizeMission(
@@ -483,17 +484,17 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _targetType,
         uint256 _id
     ) public checkAccess(_type, _targetType) {
-        uint256[] memory ids = getMissionIds(_user, _type, _id);
+        uint256[] memory ids = getMissionIds(_user, _targetType, _id);
         for (uint256 i; i < ids.length; i++) {
-            if (_type == 1) {
+            if (_targetType == 1) {
                 l[ids[i]].mission.missionFinalized = true;
-            } else if (_type == 2) {
+            } else if (_targetType == 2) {
                 w[ids[i]].mission.missionFinalized = true;
-            } else if (_type == 3) {
+            } else if (_targetType == 3) {
                 s[ids[i]].mission.missionFinalized = true;
-            } else if (_type == 4) {
+            } else if (_targetType == 4) {
                 m[ids[i]].mission.missionFinalized = true;
-            } else if (_type == 5) {
+            } else if (_targetType == 5) {
                 p[ids[i]].mission.missionFinalized = true;
             }
         }

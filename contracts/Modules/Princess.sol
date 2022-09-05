@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
 import "../Interfaces/ITournament.sol";
+import "hardhat/console.sol";
 
 contract Princess is Initializable {
     IMicroColonies private micro;
@@ -57,7 +58,7 @@ contract Princess is Initializable {
             micro.kill(msg.sender, 5, 4, maleIds[i]);
             if (princesses > 0) {
                 if (nonce >= threshold) {
-                    micro.kill(msg.sender, 5, 5, _id);
+                    micro.kill(msg.sender, 5, 5, ids[princesses - 1]);
                     micro.print(msg.sender, 5, 0, 1);
                     princesses--;
                 }
@@ -69,14 +70,15 @@ contract Princess is Initializable {
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
         uint256 id = micro.getMissionIds(_user, 5, _id)[0];
-        return
-            (micro.p(id).mission.missionTimestamp >
-                micro.lollipops(_user).timestamp &&
-                micro.p(id).mission.missionTimestamp <=
-                (micro.lollipops(_user).timestamp +
-                    micro.schedule().lollipopDuration))
-                ? true
-                : false;
+        return false;
+        // return
+        //     (micro.p(id).mission.missionTimestamp >
+        //         micro.lollipops(_user).timestamp &&
+        //         micro.p(id).mission.missionTimestamp <=
+        //         (micro.lollipops(_user).timestamp +
+        //             micro.schedule().lollipopDuration))
+        //         ? true
+        //         : false;
     }
 
     function onSeason(address _user, uint256 _id) public view returns (bool) {
@@ -97,10 +99,10 @@ contract Princess is Initializable {
         returns (uint256[4] memory start, uint256[4] memory end)
     {
         uint256 date = tournament.startDate();
-        uint256 epoch = tournament.epochDuration();
+        uint256 tournamentDuration = tournament.tournamentDuration();
         for (uint256 i; i < 4; i++) {
-            start[i] = date + epoch * i;
-            end[i] = date + tournament.tournamentDuration() + epoch * i;
+            start[i] = date + (tournamentDuration / 4) * i;
+            end[i] = start[i] + tournamentDuration / 16;
         }
     }
 }
