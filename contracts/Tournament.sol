@@ -44,6 +44,7 @@ contract Tournament is Initializable {
         address[] calldata _implementations
     ) public initializer {
         tournamentTitle = _tournamentTitle;
+        epochDuration = _epochDuration;
         tournamentDuration = _epochDuration * 112;
         currencyToken = _currencyToken;
         entranceFee = _entranceFee;

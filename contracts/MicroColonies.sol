@@ -76,6 +76,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         bool deploy;
     }
 
+    // battle (50) 50 soldier -> WRITE +50
+
     /// @dev user => QLWSMP => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
     mapping(address => mapping(uint256 => uint256[])) public userMissions;
@@ -341,7 +343,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             print(_user, 0, 1, 10);
             print(_user, 0, 0, 1);
         }
-        funghiBalance[_user] = 100000; // remove at production
+        funghiBalance[_user] = 100000; // remove at production!
+        feromonBalance[_user] = 100000; // remove at production!
     }
 
     function useLollipop() public {
@@ -406,10 +409,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _targetType,
         uint256 _amount
     ) public checkAccess(_type, _targetType) {
-        require(
-            _amount <= (capacity[_user] - nested[_user]),
-            "You don't have enough nest capacity."
-        );
+        if (_targetType != 1) {
+            require(
+                _amount <= (capacity[_user] - nested[_user]),
+                "You don't have enough nest capacity."
+            );
+        }
         for (uint256 i; i < _amount; i++) {
             if (_targetType == 0) {
                 q[counters[0]] = Q(1, 0, block.timestamp);
@@ -596,6 +601,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _amount
     ) public checkAccess(_type, _targetType) {
         q[_id].eggs += _amount;
+    }
+
+    function queenLevelup(
+        uint256 _id,
+        uint256 _type,
+        uint256 _targetType
+    ) public checkAccess(_type, _targetType) {
+        q[_id].level++;
     }
 
     // soldier-only

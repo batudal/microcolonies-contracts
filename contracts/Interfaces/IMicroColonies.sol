@@ -261,4 +261,10 @@ interface IMicroColonies {
 
     function initialize(uint256 _epoch, address[] calldata _participants)
         external;
+
+    function queenLevelup(
+        uint256 _id,
+        uint256 _type,
+        uint256 _targetType
+    ) external;
 }

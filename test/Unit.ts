@@ -197,6 +197,39 @@ describe("Unit Tests", function () {
       princess_ids,
     };
   }
+  async function hatch2_Fixture() {
+    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, tournament, owner, addr1, addr2 } = await loadFixture(createFixture);
+    await tournament.enterTournament(`takezo_pack2`, 2);
+    await larva.incubate(10, feedAmount);
+    const missions = await microColonies.getUserMissions(owner.address, 1);
+    await network.provider.send("evm_increaseTime", [epoch + 10]);
+    await network.provider.send("evm_mine");
+    await larva.hatch(missions[0]);
+    const queen_ids = await microColonies.getUserIds(owner.address, 0, false);
+    const worker_ids = await microColonies.getUserIds(owner.address, 2, false);
+    const soldier_ids = await microColonies.getUserIds(owner.address, 3, false);
+    const male_ids = await microColonies.getUserIds(owner.address, 4, false);
+    const princess_ids = await microColonies.getUserIds(owner.address, 5, false);
+    return {
+      mock20,
+      microColonies,
+      queen,
+      larva,
+      worker,
+      soldier,
+      princess,
+      disaster,
+      tournament,
+      owner,
+      addr1,
+      addr2,
+      queen_ids,
+      worker_ids,
+      soldier_ids,
+      male_ids,
+      princess_ids,
+    };
+  }
 
   describe("Tournament Unit Tests", () => {
     it("Should create a tournament with free entrance", async function () {
@@ -599,6 +632,60 @@ describe("Unit Tests", function () {
       expect(queens.length).to.be.greaterThanOrEqual(1);
       const princesses = await microColonies.getUserIds(owner.address, 5, false);
       expect(princesses.length).to.equal(0);
+    });
+  });
+  describe("Queen Unit Tests", () => {
+    it("Should lay eggs ", async () => {
+      feedAmount = 20;
+      pack = 2;
+      const { owner, microColonies, queen, queen_ids } = await loadFixture(hatch2_Fixture);
+      expect(queen_ids.length).to.equal(1);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.be.closeTo(80, 1);
+      const now = Math.floor(Date.now() / 1000).toString();
+      await time.increaseTo(parseFloat(now) + epoch * 6 + 10);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await queen.claimEggs(queen_ids[0]);
+      const larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(larvae.length).to.equal(15);
+    });
+    it("Should feed and keep producing", async () => {
+      feedAmount = 20;
+      pack = 2;
+      const { owner, microColonies, queen, queen_ids } = await loadFixture(hatch2_Fixture);
+      expect(queen_ids.length).to.equal(1);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.be.closeTo(80, 1);
+      let now = Math.floor(Date.now() / 1000).toString();
+      await time.increaseTo(parseFloat(now) + epoch * 6);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await queen.claimEggs(queen_ids[0]);
+      const larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(larvae.length).to.equal(15);
+      //feed
+      await queen.feedQueen(queen_ids[0]);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(100);
+      await time.increaseTo(parseFloat(now) + epoch * 12);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await queen.claimEggs(queen_ids[0]);
+    });
+    it("Should upgrade and produce more", async () => {
+      feedAmount = 20;
+      pack = 2;
+      const { owner, microColonies, queen, queen_ids } = await loadFixture(hatch2_Fixture);
+      expect(queen_ids.length).to.equal(1);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.be.closeTo(80, 1);
+      let now = Math.floor(Date.now() / 1000).toString();
+      await time.increaseTo(parseFloat(now) + epoch * 6);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await queen.queenUpgrade(queen_ids[0]);
+      let larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(larvae.length).to.equal(15);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(100);
+      expect((await microColonies.q(queen_ids[0])).level).to.equal(2);
+      await time.increaseTo(parseFloat(now) + epoch * 13);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await queen.claimEggs(queen_ids[0]);
+      larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(larvae.length).to.equal(43);
     });
   });
 });

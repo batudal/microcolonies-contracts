@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
 import "../Interfaces/ITournament.sol";
+import "hardhat/console.sol";
 
 contract Queen is Initializable {
     IMicroColonies private micro;
@@ -13,7 +14,7 @@ contract Queen is Initializable {
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
-        fert = [5, 9, 12];
+        fert = [5, 7, 9];
     }
 
     function claimAllEggs() public {
@@ -49,6 +50,9 @@ contract Queen is Initializable {
         claimEggs(_id);
         uint256 epochs = (block.timestamp - micro.q(_id).timestamp) /
             tournament.epochDuration();
+        if (fert[micro.q(_id).level] < epochs) {
+            epochs = fert[micro.q(_id).level];
+        }
         uint256 amount = epochs * micro.tariff().queenPortion;
         micro.resetQueen(0, 0, _id);
         micro.spendFunghi(0, 0, msg.sender, amount);
@@ -67,7 +71,7 @@ contract Queen is Initializable {
         claimEggs(_id);
         feedQueen(_id);
         micro.spendFeromon(0, 0, msg.sender, amount);
-        micro.q(_id).level += 1;
+        micro.queenLevelup(_id, 0, 0);
     }
 
     function getQueenEnergy(uint256 _id) public view returns (uint256 energy) {

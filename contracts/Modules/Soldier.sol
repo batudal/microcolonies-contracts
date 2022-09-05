@@ -17,15 +17,11 @@ contract Soldier is Initializable {
         nonce = 42;
     }
 
-    // add heal function
-
     // integrate infection
     function scout(uint256 _amount) public isSafe(true) {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
-
         require(_amount <= ids.length, "Not enough soldiers.");
         uint256 missionId = micro.createMission(msg.sender, 3, 3);
-
         for (uint256 i; i < _amount; i++) {
             micro.addToMission(msg.sender, 3, 3, 0, ids[i], missionId);
             if (micro.s(ids[i]).hp > 0) {
