@@ -1,20 +1,20 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
-    "txHash": "0xed926f7ffe9e3193e1f3a9a876e07fbdda19f92e113d454361dbd41b4f7442c7"
+    "address": "0xe6D23a827aa7C1c31ac7726fD25AB6cE1b12f4B7",
+    "txHash": "0x257c83a142ab688a23c245715643ff1ba3adb338874732a4b21112b46b12dcd9"
   },
   "proxies": [
     {
-      "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
-      "txHash": "0x913adf69db1619f77db5900d8477c5adc3faa5ff56ec77309117575701ad0fa0",
+      "address": "0xe499A33a1EfCA10199622DFFDF89ade102E7ce98",
+      "txHash": "0x22ba5e77dd0dcb0e3e36eda13acbdb7683f1e1b1ba6008c0b0840f373ac9ca34",
       "kind": "transparent"
     }
   ],
   "impls": {
     "0fbff1a35c0571ba7d2d012abcd1038ca78f4ef1d54b031c325c85b6255fe6b3": {
-      "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
-      "txHash": "0xc3f62e444c1ec9eb48f1c6a6cd52358443c64da3b997a02d4beeeabbc58bd48d",
+      "address": "0xdE14B3178FCE8045C9ad03A54300567E4F17aa5d",
+      "txHash": "0x5912ed608a77ec2dd5ad9088e28e01af024e388798105f5d4a76c8efee47e0ef",
       "layout": {
         "storage": [
           {
@@ -38,7 +38,7 @@
             "label": "tournaments",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(Tournament)8645)dyn_storage",
+            "type": "t_array(t_contract(Tournament)9435)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:9"
           },
@@ -68,7 +68,7 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_contract(Tournament)8645)dyn_storage": {
+          "t_array(t_contract(Tournament)9435)dyn_storage": {
             "label": "contract Tournament[]",
             "numberOfBytes": "32"
           },
@@ -76,7 +76,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(Tournament)8645": {
+          "t_contract(Tournament)9435": {
             "label": "contract Tournament",
             "numberOfBytes": "20"
           },

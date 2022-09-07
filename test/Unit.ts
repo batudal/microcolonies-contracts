@@ -1,39 +1,18 @@
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
 import { ethers, upgrades, network } from "hardhat";
-import hre from "hardhat";
-import { TournamentFactory__factory } from "../typechain-types";
-const takezo = "0xfB1C2FF46962B452C1731d44F0789bFb3607e63f";
-let pack = 0;
+
 const epoch = 21600;
 let feedAmount = 0;
-// schedule.workerFarm = 1;
-// schedule.workerBuild = 5;
-// schedule.conversion = 1;
-// schedule.soldierRaid = 3;
-// schedule.zombification = 5;
-// schedule.zombieHarvest = 5;
-// schedule.zombieGuard = 1;
-// schedule.incubation = 1;
-// schedule.queenPeriod = 1;
-// schedule.lollipopDuration = 1;
-// tariff.larvaPortion = 400;
-// tariff.queenPortion = 240;
-// tariff.queenUpgrade = 1000;
-// tariff.conversion = 100;
-// tariff.zombieHarvest = 400;
-// tariff.buildReward = 5;
-
 const farmReward = 80;
 const workerBuild = 5;
 const workerFarm = 1;
 const buildReward = 5;
-const conversionAmount = 10;
 const conversionDuration = 1;
 const soldierScout = 3;
 const zombieHarvest = 5;
 const harvestReward = 400;
+let pack;
 
 describe("Unit Tests", function () {
   async function deployFixture() {
@@ -417,6 +396,17 @@ describe("Unit Tests", function () {
       expect(workers_pre - workers_after).to.equal(2);
       const soldiers_after = parseFloat((await microColonies.getUserIds(owner.address, 3, false)).length.toString());
       expect(soldiers_after - soldiers_pre).to.equal(2);
+    });
+    it("Should work with multiple simultaneous missions", async () => {
+      feedAmount = 0;
+      const { microColonies, worker, worker_ids, owner } = await loadFixture(hatch0_Fixture);
+      expect(worker_ids.length).to.be.greaterThan(0);
+      await worker.farm(worker_ids.length);
+      const missions = await microColonies.getUserMissions(owner.address, 2);
+      expect((await microColonies.getMissionIds(owner.address, 2, missions[0])).length).to.equal(worker_ids.length);
+      await network.provider.send("evm_increaseTime", [epoch * workerFarm + 10]);
+      await network.provider.send("evm_mine");
+      await worker.claimFarmed(missions[0]);
     });
   });
   // zombie defence integration!

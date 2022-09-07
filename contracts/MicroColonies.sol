@@ -191,6 +191,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     ) public view returns (uint256[] memory ids) {
         ids = new uint256[](getLength(_user, _type, true));
         uint256 total = getLength(_user, _type, false);
+        uint256 counter;
         if (_available) {
             for (uint256 i; i < total; i++) {
                 if (
@@ -225,7 +226,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                                 .missionTimestamp ==
                             0))
                 ) {
-                    ids[i] = userIds[_user][_type][i];
+                    ids[counter] = userIds[_user][_type][i];
+                    counter++;
                 }
             }
         } else {
@@ -238,54 +240,46 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _type,
         bool _available
     ) public view returns (uint256 length) {
-        length = userIds[_user][_type].length;
         if (_available) {
-            for (uint256 i; i < length; i++) {
+            for (uint256 i; i < userIds[_user][_type].length; i++) {
                 if (
+                    (_type == 0) ||
                     (_type == 1 &&
-                        (!l[userIds[_user][_type][i]]
-                            .mission
-                            .missionFinalized &&
+                        (l[userIds[_user][_type][i]].mission.missionFinalized ||
                             l[userIds[_user][_type][i]]
                                 .mission
-                                .missionTimestamp !=
+                                .missionTimestamp ==
                             0)) ||
                     (_type == 2 &&
-                        (!w[userIds[_user][_type][i]]
-                            .mission
-                            .missionFinalized &&
+                        (w[userIds[_user][_type][i]].mission.missionFinalized ||
                             w[userIds[_user][_type][i]]
                                 .mission
-                                .missionTimestamp !=
+                                .missionTimestamp ==
                             0)) ||
                     (_type == 3 &&
-                        (!s[userIds[_user][_type][i]]
-                            .mission
-                            .missionFinalized &&
+                        (s[userIds[_user][_type][i]].mission.missionFinalized ||
                             s[userIds[_user][_type][i]]
                                 .mission
-                                .missionTimestamp !=
+                                .missionTimestamp ==
                             0)) ||
                     (_type == 4 &&
-                        (!m[userIds[_user][_type][i]]
-                            .mission
-                            .missionFinalized &&
+                        (m[userIds[_user][_type][i]].mission.missionFinalized ||
                             m[userIds[_user][_type][i]]
                                 .mission
-                                .missionTimestamp !=
+                                .missionTimestamp ==
                             0)) ||
                     (_type == 5 &&
-                        (!p[userIds[_user][_type][i]]
-                            .mission
-                            .missionFinalized &&
+                        (p[userIds[_user][_type][i]].mission.missionFinalized ||
                             p[userIds[_user][_type][i]]
                                 .mission
-                                .missionTimestamp !=
+                                .missionTimestamp ==
                             0))
                 ) {
-                    length--;
+                    length++;
                 }
             }
+        } else {
+            length = userIds[_user][_type].length;
         }
     }
 
@@ -392,7 +386,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _id
     ) public checkAccess(_type, _targetType) {
         uint256 index = findIndex(_user, _targetType, _id);
-        if (userIds[_user][_targetType].length > 1) {
+        if (userIds[_user][_targetType].length > 0) {
             userIds[_user][_targetType][index] = userIds[_user][_targetType][
                 userIds[_user][_targetType].length - 1
             ];
