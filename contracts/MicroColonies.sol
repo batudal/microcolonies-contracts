@@ -76,13 +76,21 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         bool deploy;
     }
 
+    enum MissionState {
+        NULL,
+        INITIALIZED,
+        COMPLETED
+    }
+
     // battle (50) 50 soldier -> WRITE +50
 
     /// @dev user => QLWSMP => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
-    mapping(address => mapping(uint256 => uint256[])) public userMissions;
+    mapping(address => mapping(uint256 => uint256[])) public userMissions; // convert to Mission[]
     mapping(address => mapping(uint256 => mapping(uint256 => uint256[])))
         public missionIds;
+    mapping(address => mapping(uint256 => mapping(uint256 => MissionState)))
+        public missionStates;
     mapping(address => Lolli) public lollipops;
     mapping(address => uint256) public funghiBalance;
     mapping(address => uint256) public feromonBalance;
@@ -233,6 +241,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         } else {
             ids = userIds[_user][_type];
         }
+    }
+
+    function getMissionState(
+        address _user,
+        uint256 _type,
+        uint256 _id
+    ) public view returns (MissionState state) {
+        state = missionStates[_user][_type][_id];
     }
 
     function getLength(
@@ -445,7 +461,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         } else {
             highest = 1;
         }
-
+        missionStates[_user][_targetType][highest] = MissionState(1);
         userMissions[_user][_targetType].push(highest);
     }
 
@@ -497,14 +513,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 p[ids[i]].mission.missionFinalized = true;
             }
         }
-        // for (uint256 i; i < userMissions[_user][_targetType].length; i++) {
-        //     if (userMissions[_user][_targetType][i] == _id) {
-        //         userMissions[_user][_targetType][i] = userMissions[_user][
-        //             _targetType
-        //         ][userMissions[_user][_targetType].length - 1];
-        //         userMissions[_user][_targetType].pop();
-        //     }
-        // }
+        missionStates[_user][_targetType][_id] = MissionState(2);
     }
 
     function earnXp(

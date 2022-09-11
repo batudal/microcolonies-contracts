@@ -10,7 +10,7 @@ async function main() {
   console.log("Micro addr -> ", microAddr);
   const Micro = await ethers.getContractFactory("MicroColonies");
   const micro = Micro.attach(microAddr);
-  const ids = await micro.getUserIds(takezo, 1, false);
+  const ids = await micro.getUserIds(takezo, 0, false);
   console.log("IDS:", ids);
 }
 

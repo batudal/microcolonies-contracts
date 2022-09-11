@@ -267,4 +267,13 @@ contract Soldier is Initializable {
             }
         }
     }
+
+    function getZombieCount(address _user) public view returns (uint256 count) {
+        uint256[] memory ids = micro.getUserIds(_user, 3, true);
+        for (uint256 i; i < ids.length; i++) {
+            if (micro.s(ids[i]).hp == 0) {
+                count++;
+            }
+        }
+    }
 }

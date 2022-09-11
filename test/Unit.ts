@@ -300,12 +300,16 @@ describe("Unit Tests", function () {
       await larva.incubate(20, 0);
       const missions = await microColonies.getUserMissions(owner.address, 1);
       expect(missions.length).to.equal(1);
+      const missionState = await microColonies.missionStates(owner.address, 1, missions[0]);
+      expect(missionState).to.equal(0);
       const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
       expect(missionIds.length).to.equal(20);
       await network.provider.send("evm_increaseTime", [epoch + 10]);
       await network.provider.send("evm_mine");
       expect(await microColonies.nested(owner.address)).to.equal(0);
       await larva.hatch(missions[0]);
+      const missionState_after = await microColonies.missionStates(owner.address, 1, missions[0]);
+      expect(missionState_after).to.equal(1);
       expect(await microColonies.nested(owner.address)).to.equal(20);
     });
     it("Should hatch (10/20 fed)", async () => {
