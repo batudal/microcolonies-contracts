@@ -34,6 +34,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 zombieHarvest;
         uint256 farmReward;
         uint256 buildReward;
+        uint256 soldierHeal;
     }
     struct Q {
         uint256 level;
@@ -163,6 +164,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.zombieHarvest = 400;
         tariff.farmReward = 80;
         tariff.buildReward = 5;
+        tariff.soldierHeal = 80;
         nonce = 42;
     }
 
@@ -435,7 +437,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             } else if (_targetType == 4) {
                 m[counters[4]] = M(Mission(0, 0, 0, false));
             } else if (_targetType == 3) {
-                s[counters[3]] = S(3, Mission(0, 0, 0, false), 0);
+                s[counters[3]] = S(2, Mission(0, 0, 0, false), 0);
             } else if (_targetType == 2) {
                 w[counters[2]] = W(5, Mission(0, 0, 0, false));
             }
@@ -620,7 +622,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _targetType,
         uint256 _id
     ) public checkAccess(_type, _targetType) {
-        s[_id].hp = 3;
+        s[_id].hp == 2;
         s[_id].damageTimestamp = 0;
     }
 }

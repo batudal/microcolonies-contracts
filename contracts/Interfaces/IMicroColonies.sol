@@ -9,6 +9,7 @@ struct Tariff {
     uint256 zombieHarvest;
     uint256 farmReward;
     uint256 buildReward;
+    uint256 soldierHeal;
 }
 
 struct Schedule {
@@ -235,12 +236,6 @@ interface IMicroColonies {
         view
         returns (uint256[] memory ids);
 
-    function healSoldier(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) external;
-
     function matingBoost(
         address _user,
         uint256 _type,
@@ -266,5 +261,11 @@ interface IMicroColonies {
         uint256 _id,
         uint256 _type,
         uint256 _targetType
+    ) external;
+
+    function healSoldier(
+        uint256 _type,
+        uint256 _targetType,
+        uint256 _id
     ) external;
 }

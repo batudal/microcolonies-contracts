@@ -24,9 +24,6 @@ contract Soldier is Initializable {
         uint256 missionId = micro.createMission(msg.sender, 3, 3);
         for (uint256 i; i < _amount; i++) {
             micro.addToMission(msg.sender, 3, 3, 0, ids[i], missionId);
-            if (micro.s(ids[i]).hp > 0) {
-                micro.decreaseHP(3, 3, ids[i]);
-            }
         }
         micro.earnXp(3, 3, msg.sender, _amount);
     }
@@ -71,8 +68,13 @@ contract Soldier is Initializable {
         target = participants[prob];
     }
 
-    // implementation pls!
     function retreat(uint256 _id) public isSafe(false) {
+        uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
+        for (uint256 i; i < ids.length; i++) {
+            if (micro.s(ids[i]).hp > 0) {
+                micro.decreaseHP(3, 3, _id);
+            }
+        }
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
 
@@ -119,7 +121,7 @@ contract Soldier is Initializable {
         require(targetLarvae.length > 0, "Target has no larvae.");
         uint256 reward = battle(soldiers, targetSoldiers, targetLarvae);
         if (reward == 0) {
-            return ();
+            micro.finalizeMission(msg.sender, 3, 3, _id);
         }
         for (uint256 i; i < reward; i++) {
             micro.kill(reveal(_id), 3, 1, targetLarvae[i]);
@@ -273,6 +275,38 @@ contract Soldier is Initializable {
         for (uint256 i; i < ids.length; i++) {
             if (micro.s(ids[i]).hp == 0) {
                 count++;
+            }
+        }
+    }
+
+    function getInfected(address _user) public view returns (uint256 count) {
+        uint256[] memory ids = micro.getUserIds(_user, 3, false);
+        for (uint256 i; i < ids.length; i++) {
+            if (micro.s(ids[i]).hp == 1) {
+                count++;
+            }
+        }
+    }
+
+    function healSoldiers(uint256 _amount) public {
+        require(_amount > 0);
+        uint256 infected = getInfected(msg.sender);
+        require(infected >= _amount);
+        require(
+            micro.funghiBalance(msg.sender) >
+                infected * micro.tariff().soldierHeal
+        );
+        uint256[] memory ids = micro.getUserIds(msg.sender, 3, false);
+        for (uint256 i; i < ids.length; i++) {
+            if (micro.s(ids[i]).hp == 1 && _amount > 0) {
+                micro.spendFunghi(
+                    3,
+                    3,
+                    msg.sender,
+                    _amount * micro.tariff().soldierHeal
+                );
+                micro.healSoldier(3, 3, ids[i]);
+                _amount--;
             }
         }
     }
