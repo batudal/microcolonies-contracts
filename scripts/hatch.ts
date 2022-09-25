@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-const tournamentAddr = "0x5D95E9AD950608Da13bB813CEBd0E559047c25D9";
+const tournamentAddr = "0x96f99bCBB37Fa0ef5C615dE8Da23820696292b98";
 const takezo = "0xfb1c2ff46962b452c1731d44f0789bfb3607e63f";
 const epoch = 120;
 

@@ -57,17 +57,23 @@ describe("Unit Tests", function () {
     await princess.deployed();
     const init_princess = await princess.initialize(microColonies.address);
     await init_princess.wait();
-    //deploy disaster
+    // deploy disaster
     const Disaster = await ethers.getContractFactory("Disaster");
     const disaster = await Disaster.deploy();
     await disaster.deployed();
     const init_disaster = await disaster.initialize(microColonies.address);
     await init_disaster.wait();
+    // deploy zombie
+    const Zombie = await ethers.getContractFactory("Zombie");
+    const zombie = await Zombie.deploy();
+    await zombie.deployed();
+    const init_zombie = await zombie.initialize(microColonies.address);
+    await init_zombie.wait();
 
     // deploy tournamentFactory
     const TournamentFactory = await ethers.getContractFactory("TournamentFactory");
     const tournamentFactory = await upgrades.deployProxy(TournamentFactory, [
-      [microColonies.address, queen.address, larva.address, worker.address, soldier.address, princess.address, disaster.address],
+      [microColonies.address, queen.address, larva.address, worker.address, soldier.address, princess.address, disaster.address, zombie.address],
     ]);
     await tournamentFactory.deployed();
     return {
@@ -79,11 +85,12 @@ describe("Unit Tests", function () {
       Soldier,
       Princess,
       Disaster,
+      Zombie,
       tournamentFactory,
     };
   }
   async function createFixture() {
-    const { mock20, MicroColonies, Queen, Larva, Worker, Soldier, Princess, Disaster, tournamentFactory } = await loadFixture(deployFixture);
+    const { mock20, MicroColonies, Queen, Larva, Worker, Soldier, Princess, Disaster, Zombie, tournamentFactory } = await loadFixture(deployFixture);
     const [owner, addr1, addr2] = await ethers.getSigners();
     const now = Math.floor(Date.now() / 1000).toString();
     await tournamentFactory.createTournament("Title", [owner.address, addr1.address, addr2.address], 0, mock20.address, epoch, now);
@@ -98,6 +105,7 @@ describe("Unit Tests", function () {
     const soldier = Soldier.attach(tournamentContracts.soldier);
     const princess = Princess.attach(tournamentContracts.princess);
     const disaster = Disaster.attach(tournamentContracts.disaster);
+    const zombie = Zombie.attach(tournamentContracts.zombie);
     return {
       mock20,
       microColonies,
@@ -107,6 +115,7 @@ describe("Unit Tests", function () {
       soldier,
       princess,
       disaster,
+      zombie,
       tournament,
       owner,
       addr1,
@@ -114,7 +123,9 @@ describe("Unit Tests", function () {
     };
   }
   async function hatch0_Fixture() {
-    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, tournament, owner, addr1, addr2 } = await loadFixture(createFixture);
+    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, zombie, tournament, owner, addr1, addr2 } = await loadFixture(
+      createFixture
+    );
     await tournament.enterTournament("takezo_pack0", 0);
     await larva.incubate(20, feedAmount);
     const missions = await microColonies.getUserMissions(owner.address, 1);
@@ -123,6 +134,7 @@ describe("Unit Tests", function () {
     await larva.hatch(missions[0]);
     const worker_ids = await microColonies.getUserIds(owner.address, 2, false);
     const soldier_ids = await microColonies.getUserIds(owner.address, 3, false);
+    const zombie_ids = await microColonies.getUserIds(owner.address, 6, false);
     const male_ids = await microColonies.getUserIds(owner.address, 4, false);
     const princess_ids = await microColonies.getUserIds(owner.address, 5, false);
     return {
@@ -134,18 +146,22 @@ describe("Unit Tests", function () {
       soldier,
       princess,
       disaster,
+      zombie,
       tournament,
       owner,
       addr1,
       addr2,
       worker_ids,
       soldier_ids,
+      zombie_ids,
       male_ids,
       princess_ids,
     };
   }
   async function hatch1_Fixture() {
-    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, tournament, owner, addr1, addr2 } = await loadFixture(createFixture);
+    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, zombie, tournament, owner, addr1, addr2 } = await loadFixture(
+      createFixture
+    );
     await tournament.enterTournament(`takezo_pack1`, 1);
     await larva.incubate(15, feedAmount);
     const missions = await microColonies.getUserMissions(owner.address, 1);
@@ -154,6 +170,7 @@ describe("Unit Tests", function () {
     await larva.hatch(missions[0]);
     const worker_ids = await microColonies.getUserIds(owner.address, 2, false);
     const soldier_ids = await microColonies.getUserIds(owner.address, 3, false);
+    const zombie_ids = await microColonies.getUserIds(owner.address, 6, false);
     const male_ids = await microColonies.getUserIds(owner.address, 4, false);
     const princess_ids = await microColonies.getUserIds(owner.address, 5, false);
     // console.log("W", worker_ids.length, " S", soldier_ids.length, " M", male_ids.length, " P", princess_ids.length);
@@ -166,18 +183,22 @@ describe("Unit Tests", function () {
       soldier,
       princess,
       disaster,
+      zombie,
       tournament,
       owner,
       addr1,
       addr2,
       worker_ids,
       soldier_ids,
+      zombie_ids,
       male_ids,
       princess_ids,
     };
   }
   async function hatch2_Fixture() {
-    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, tournament, owner, addr1, addr2 } = await loadFixture(createFixture);
+    const { mock20, microColonies, queen, larva, worker, soldier, princess, disaster, zombie, tournament, owner, addr1, addr2 } = await loadFixture(
+      createFixture
+    );
     await tournament.enterTournament(`takezo_pack2`, 2);
     await larva.incubate(10, feedAmount);
     const missions = await microColonies.getUserMissions(owner.address, 1);
@@ -187,6 +208,7 @@ describe("Unit Tests", function () {
     const queen_ids = await microColonies.getUserIds(owner.address, 0, false);
     const worker_ids = await microColonies.getUserIds(owner.address, 2, false);
     const soldier_ids = await microColonies.getUserIds(owner.address, 3, false);
+    const zombie_ids = await microColonies.getUserIds(owner.address, 6, false);
     const male_ids = await microColonies.getUserIds(owner.address, 4, false);
     const princess_ids = await microColonies.getUserIds(owner.address, 5, false);
     return {
@@ -205,6 +227,7 @@ describe("Unit Tests", function () {
       queen_ids,
       worker_ids,
       soldier_ids,
+      zombie_ids,
       male_ids,
       princess_ids,
     };
@@ -301,7 +324,7 @@ describe("Unit Tests", function () {
       const missions = await microColonies.getUserMissions(owner.address, 1);
       expect(missions.length).to.equal(1);
       const missionState = await microColonies.missionStates(owner.address, 1, missions[0]);
-      expect(missionState).to.equal(0);
+      expect(missionState).to.equal(1);
       const missionIds = await microColonies.getMissionIds(owner.address, 1, missions[0]);
       expect(missionIds.length).to.equal(20);
       await network.provider.send("evm_increaseTime", [epoch + 10]);
@@ -309,7 +332,7 @@ describe("Unit Tests", function () {
       expect(await microColonies.nested(owner.address)).to.equal(0);
       await larva.hatch(missions[0]);
       const missionState_after = await microColonies.missionStates(owner.address, 1, missions[0]);
-      expect(missionState_after).to.equal(1);
+      expect(missionState_after).to.equal(2);
       expect(await microColonies.nested(owner.address)).to.equal(20);
     });
     it("Should hatch (10/20 fed)", async () => {
@@ -440,9 +463,8 @@ describe("Unit Tests", function () {
       const feromon_pre = parseFloat((await microColonies.feromonBalance(owner.address)).toString());
       const larva_pre = parseFloat((await microColonies.getUserIds(owner.address, 1, false)).length.toString());
       expect(larva_pre).to.equal(0);
-      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(3);
-      await soldier.scout(soldier_ids.length);
       expect((await microColonies.s(soldier_ids[0])).hp).to.equal(2);
+      await soldier.scout(soldier_ids.length);
       const missions = await microColonies.getUserMissions(owner.address, 3);
       expect((await microColonies.getMissionIds(owner.address, 3, missions[0])).length).to.equal(soldier_ids.length);
       await network.provider.send("evm_increaseTime", [epoch * soldierScout + 10]);
@@ -450,6 +472,8 @@ describe("Unit Tests", function () {
       const target = await soldier.reveal(missions[0]);
       expect(target).to.equal(addr1.address);
       await soldier.retreat(missions[0]);
+      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(1);
+
       const larva_after = parseFloat((await microColonies.getUserIds(owner.address, 1, false)).length.toString());
       expect(larva_after).to.equal(larva_pre);
       const feromon_after = parseFloat((await microColonies.feromonBalance(owner.address)).toString());
@@ -493,7 +517,7 @@ describe("Unit Tests", function () {
       const feromon_after = parseFloat((await microColonies.feromonBalance(owner.address)).toString());
       expect(feromon_after - feromon_pre).to.equal(3);
     });
-    it("Should become zombie after 3 missions", async () => {
+    it("Should become zombie after 2 missions", async () => {
       feedAmount = 20;
       const { microColonies, tournament, addr1, addr2, worker, worker_ids, soldier, soldier_ids, owner, larva } = await loadFixture(hatch0_Fixture);
       expect(soldier_ids.length).to.be.greaterThan(1);
@@ -522,14 +546,6 @@ describe("Unit Tests", function () {
       let target = await soldier.reveal(missions[0]);
       expect(target).to.equal(addr1.address || addr2.address);
       await soldier.retreat(missions[0]);
-      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(2);
-      await soldier.scout(soldier_ids.length);
-      missions = await microColonies.getUserMissions(owner.address, 3);
-      await network.provider.send("evm_increaseTime", [epoch * soldierScout + 10]);
-      await network.provider.send("evm_mine");
-      target = await soldier.reveal(missions[0]);
-      expect(target).to.equal(addr1.address || addr2.address);
-      await soldier.retreat(missions[0]);
       expect((await microColonies.s(soldier_ids[0])).hp).to.equal(1);
       await soldier.scout(soldier_ids.length);
       missions = await microColonies.getUserMissions(owner.address, 3);
@@ -538,11 +554,13 @@ describe("Unit Tests", function () {
       target = await soldier.reveal(missions[0]);
       expect(target).to.equal(addr1.address || addr2.address);
       await soldier.retreat(missions[0]);
-      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(0);
+      expect(await microColonies.getUserIds(owner.address, 3, false)).to.not.include(soldier_ids[0]);
     });
     it("Should get harvested as zombie", async () => {
       feedAmount = 20;
-      const { microColonies, tournament, addr1, addr2, worker, worker_ids, soldier, soldier_ids, owner, larva } = await loadFixture(hatch0_Fixture);
+      const { microColonies, tournament, addr1, addr2, worker, worker_ids, soldier, soldier_ids, owner, larva, zombie, zombie_ids } = await loadFixture(
+        hatch0_Fixture
+      );
       expect(soldier_ids.length).to.be.greaterThan(1);
       await worker.build(worker_ids.length);
       await network.provider.send("evm_increaseTime", [epoch * workerBuild + 10]);
@@ -569,14 +587,6 @@ describe("Unit Tests", function () {
       let target = await soldier.reveal(missions[0]);
       expect(target).to.equal(addr1.address || addr2.address);
       await soldier.retreat(missions[0]);
-      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(2);
-      await soldier.scout(soldier_ids.length);
-      missions = await microColonies.getUserMissions(owner.address, 3);
-      await network.provider.send("evm_increaseTime", [epoch * soldierScout + 10]);
-      await network.provider.send("evm_mine");
-      target = await soldier.reveal(missions[0]);
-      expect(target).to.equal(addr1.address || addr2.address);
-      await soldier.retreat(missions[0]);
       expect((await microColonies.s(soldier_ids[0])).hp).to.equal(1);
       await soldier.scout(soldier_ids.length);
       missions = await microColonies.getUserMissions(owner.address, 3);
@@ -585,15 +595,16 @@ describe("Unit Tests", function () {
       target = await soldier.reveal(missions[0]);
       expect(target).to.equal(addr1.address || addr2.address);
       await soldier.retreat(missions[0]);
-      expect((await microColonies.s(soldier_ids[0])).hp).to.equal(0);
-      await soldier.harvest(soldier_ids.length);
+      expect(await microColonies.getUserIds(owner.address, 3, false)).to.not.include(soldier_ids[0]);
+      let zombies = await microColonies.getUserIds(owner.address, 6, true);
+      await zombie.harvest(zombies.length);
+      const zombieMissions = await microColonies.getUserMissions(owner.address, 6);
       await network.provider.send("evm_increaseTime", [epoch * zombieHarvest + 10]);
       await network.provider.send("evm_mine");
-      missions = await microColonies.getUserMissions(owner.address, 3);
       const funghi_pre = parseFloat((await microColonies.funghiBalance(owner.address)).toString());
-      await soldier.claimHarvested(missions[missions.length - 1]);
+      await zombie.claimHarvested(zombieMissions[zombieMissions.length - 1]);
       const funghi_after = parseFloat((await microColonies.funghiBalance(owner.address)).toString());
-      expect(funghi_after - funghi_pre).to.equal(soldier_ids.length * harvestReward);
+      expect(funghi_after - funghi_pre).to.equal(zombies.length * harvestReward);
     });
   });
   describe("Princess Unit Tests", () => {
@@ -611,22 +622,22 @@ describe("Unit Tests", function () {
       const queens = await microColonies.getUserIds(owner.address, 0, false);
       expect(queens.length).to.be.greaterThanOrEqual(1);
     });
-    it("Should mate off-season", async () => {
-      feedAmount = 20;
-      pack = 1;
-      const { owner, microColonies, princess, princess_ids } = await loadFixture(hatch1_Fixture);
-      expect(princess_ids.length).to.be.greaterThanOrEqual(1);
-      const { start, end } = await princess.seasonDates();
-      await time.increaseTo(parseFloat(start[1].toString()) - 1000);
-      await princess.mate(princess_ids.length);
-      let missions = await microColonies.getUserMissions(owner.address, 5);
-      await time.increaseTo(parseFloat(start[1].toString()) + epoch * 4 + 10);
-      await princess.claimMated(missions[missions.length - 1]);
-      const queens = await microColonies.getUserIds(owner.address, 0, false);
-      expect(queens.length).to.be.greaterThanOrEqual(1);
-      const princesses = await microColonies.getUserIds(owner.address, 5, false);
-      expect(princesses.length).to.equal(0);
-    });
+    // it("Should mate off-season", async () => {
+    //   feedAmount = 20;
+    //   pack = 1;
+    //   const { owner, microColonies, princess, princess_ids } = await loadFixture(hatch1_Fixture);
+    //   expect(princess_ids.length).to.be.greaterThanOrEqual(1);
+    //   const { start, end } = await princess.seasonDates();
+    //   await time.increaseTo(parseFloat(start[1].toString()) - 1000);
+    //   await princess.mate(princess_ids.length);
+    //   let missions = await microColonies.getUserMissions(owner.address, 5);
+    //   await time.increaseTo(parseFloat(start[1].toString()) + epoch * 4 + 10);
+    //   await princess.claimMated(missions[missions.length - 1]);
+    //   const queens = await microColonies.getUserIds(owner.address, 0, false);
+    //   expect(queens.length).to.be.greaterThanOrEqual(1);
+    //   const princesses = await microColonies.getUserIds(owner.address, 5, false);
+    //   expect(princesses.length).to.equal(0);
+    // });
   });
   describe("Queen Unit Tests", () => {
     it("Should lay eggs ", async () => {
@@ -636,11 +647,23 @@ describe("Unit Tests", function () {
       expect(queen_ids.length).to.equal(1);
       expect(await queen.getQueenEnergy(queen_ids[0])).to.be.closeTo(80, 1);
       const now = Math.floor(Date.now() / 1000).toString();
-      await time.increaseTo(parseFloat(now) + epoch * 6 + 10);
-      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      await time.increaseTo(parseFloat(now) + epoch * 1 + 100);
+      let epochs = await queen.getQueenEpochs(queen_ids[0]);
+      expect(epochs).to.equal(1);
+      let timeToNext = await queen.getTimeToNext(queen_ids[0]);
+      expect(timeToNext).not.to.equal(0);
       await queen.claimEggs(queen_ids[0]);
-      const larvae = await microColonies.getUserIds(owner.address, 1, false);
+      let larvae = await microColonies.getUserIds(owner.address, 1, false);
+      expect(larvae.length).to.equal(5);
+      await time.increaseTo(parseFloat(now) + epoch * 5 + 100);
+      await queen.claimEggs(queen_ids[0]);
+      larvae = await microColonies.getUserIds(owner.address, 1, false);
       expect(larvae.length).to.equal(15);
+      expect(await queen.getQueenEnergy(queen_ids[0])).to.equal(0);
+      epochs = await queen.getQueenEpochs(queen_ids[0]);
+      expect(epochs).to.equal(5);
+      timeToNext = await queen.getTimeToNext(queen_ids[0]);
+      expect(timeToNext).to.equal(0);
     });
     it("Should feed and keep producing", async () => {
       feedAmount = 20;

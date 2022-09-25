@@ -17,6 +17,27 @@ contract Queen is Initializable {
         fert = [5, 7, 9];
     }
 
+    function getQueenEpochs(uint256 _id) public view returns (uint256 epochs) {
+        epochs =
+            (block.timestamp - micro.q(_id).timestamp) /
+            tournament.epochDuration();
+    }
+
+    function getTimeToNext(uint256 _id) public view returns (uint256 time) {
+        uint256 epochs = getQueenEpochs(_id);
+        if (epochs >= fert[micro.q(_id).level - 1]) {
+            time = 0;
+        } else {
+            uint256 epochsLeft = fert[micro.q(_id).level - 1] - epochs - 1;
+            uint256 max = micro.q(_id).timestamp +
+                tournament.epochDuration() *
+                fert[micro.q(_id).level - 1];
+            uint256 nextLaying = max -
+                ((epochsLeft) * tournament.epochDuration());
+            time = nextLaying - block.timestamp;
+        }
+    }
+
     function claimAllEggs() public {
         uint256[] memory ids = micro.getUserIds(msg.sender, 0, false);
         for (uint256 i; i < ids.length; i++) {
@@ -34,8 +55,7 @@ contract Queen is Initializable {
     }
 
     function eggsLaid(uint256 _id) public view returns (uint256 eggs) {
-        uint256 epochs = (block.timestamp - micro.q(_id).timestamp) /
-            tournament.epochDuration();
+        uint256 epochs = getQueenEpochs(_id);
         uint256 initEggs = fert[micro.q(_id).level - 1];
         if (epochs > initEggs) {
             epochs = initEggs;

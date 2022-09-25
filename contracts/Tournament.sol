@@ -19,6 +19,7 @@ contract Tournament is Initializable {
         address soldier;
         address princess;
         address disaster;
+        address zombie;
     }
 
     Contracts public contracts;
@@ -69,6 +70,8 @@ contract Tournament is Initializable {
         IModule(contracts.princess).initialize(contracts.microColonies);
         contracts.disaster = Clones.clone(_implementations[6]);
         IModule(contracts.disaster).initialize(contracts.microColonies);
+        contracts.zombie = Clones.clone(_implementations[7]);
+        IModule(contracts.zombie).initialize(contracts.microColonies);
     }
 
     modifier onlyParticipant() {

@@ -1,8 +1,8 @@
 import { ethers } from "hardhat";
 
 const takezo = "0xfb1c2ff46962b452c1731d44f0789bfb3607e63f";
-const factory = "0xDd40FB77Ee1eda65AdFd09d2Bc3696b70F455706";
-const mock20 = "0x18C6B883f3dEFe834f6929D6EcbD6e9F077CF49F";
+const factory = "0x0685BBc47c265D550b1fBa9dB9A903b0dA661034";
+const mock20 = "0x2C64Cc91b9fBA1c062b6dB8000dF0D381837eDa2";
 const epoch = 120;
 
 async function main() {
@@ -16,7 +16,8 @@ async function main() {
   console.log("Tournament address -> ", tournamentAddr);
   const Tournament = await ethers.getContractFactory("Tournament");
   const tournament = Tournament.attach(tournamentAddr);
-  await tournament.enterTournament("Takezo", 0);
+  const entertx = await tournament.enterTournament("Takezo", 2);
+  await entertx.wait();
   console.log("Entered.");
 }
 main().catch((error) => {

@@ -48,17 +48,24 @@ async function main() {
   console.log("Princess -> ", princess.address);
   const init_princess = await princess.initialize(microColonies.address);
   await init_princess.wait();
-  //deploy disaster
+  // deploy disaster
   const Disaster = await ethers.getContractFactory("Disaster");
   const disaster = await Disaster.deploy();
   await disaster.deployed();
   console.log("Disaster -> ", disaster.address);
   const init_disaster = await disaster.initialize(microColonies.address);
   await init_disaster.wait();
+  // deploy zombie
+  const Zombie = await ethers.getContractFactory("Zombie");
+  const zombie = await Zombie.deploy();
+  await zombie.deployed();
+  console.log("Zombie -> ", zombie.address);
+  const init_zombie = await zombie.initialize(microColonies.address);
+  await init_zombie.wait();
 
   const TournamentFactory = await ethers.getContractFactory("TournamentFactory");
   const tournamentFactory = await upgrades.deployProxy(TournamentFactory, [
-    [microColonies.address, queen.address, larva.address, worker.address, soldier.address, princess.address, disaster.address],
+    [microColonies.address, queen.address, larva.address, worker.address, soldier.address, princess.address, disaster.address, zombie.address],
   ]);
   await tournamentFactory.deployed();
   console.log("Tournament factory -> ", tournamentFactory.address);

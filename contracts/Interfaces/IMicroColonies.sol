@@ -44,6 +44,9 @@ struct S {
     Mission mission; // missionType (0-scout, 1-harvest, 2-defend)
     uint256 damageTimestamp;
 }
+struct Z {
+    Mission mission;
+}
 struct M {
     Mission mission;
 }
@@ -172,6 +175,8 @@ interface IMicroColonies {
     function w(uint256 _id) external view returns (W calldata w);
 
     function s(uint256 _id) external view returns (S calldata s);
+
+    function z(uint256 _id) external view returns (Z calldata z);
 
     function m(uint256 _id) external view returns (M calldata m);
 

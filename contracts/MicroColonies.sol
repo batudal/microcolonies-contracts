@@ -40,6 +40,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 level;
         uint256 eggs;
         uint256 timestamp;
+        // Mission mission; // IMPLEMENT!!
     }
     struct L {
         Mission mission; // missionType (0-unfed, 1-fed)
@@ -49,9 +50,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         Mission mission; // missionType (0-farm, 1-build, 2-conversion)
     }
     struct S {
-        uint256 hp; // 3..1 hp 0 dead
-        Mission mission; // missionType (0-scout, 1-harvest, 2-defend)
+        uint256 hp; // 2 full 1 infected 0 dead
+        Mission mission; // missionType (0-scout)
         uint256 damageTimestamp;
+    }
+    struct Z {
+        Mission mission; // missionType (0-harvest, 1-defend)
     }
     struct M {
         Mission mission;
@@ -85,7 +89,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
 
     // battle (50) 50 soldier -> WRITE +50
 
-    /// @dev user => QLWSMP => ids
+    /// @dev user => QLWSMPZ => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
     mapping(address => mapping(uint256 => uint256[])) public userMissions; // convert to Mission[]
     mapping(address => mapping(uint256 => mapping(uint256 => uint256[])))
@@ -101,12 +105,13 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     mapping(uint256 => address) public modules;
     mapping(uint256 => Inhibition) public inhibitions;
 
-    /// @dev QLWSMP(012345) => counter;
+    /// @dev QLWSMPZ(0123456) => counter;
     mapping(uint256 => uint256) counters;
     mapping(uint256 => Q) public q;
     mapping(uint256 => L) public l;
     mapping(uint256 => W) public w;
     mapping(uint256 => S) public s;
+    mapping(uint256 => Z) public z;
     mapping(uint256 => M) public m;
     mapping(uint256 => P) public p;
 
@@ -229,6 +234,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                                 .mission
                                 .missionTimestamp ==
                             0)) ||
+                    (_type == 6 &&
+                        (z[userIds[_user][_type][i]].mission.missionFinalized ||
+                            z[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
                     (_type == 5 &&
                         (p[userIds[_user][_type][i]].mission.missionFinalized ||
                             p[userIds[_user][_type][i]]
@@ -283,6 +294,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                     (_type == 4 &&
                         (m[userIds[_user][_type][i]].mission.missionFinalized ||
                             m[userIds[_user][_type][i]]
+                                .mission
+                                .missionTimestamp ==
+                            0)) ||
+                    (_type == 6 &&
+                        (z[userIds[_user][_type][i]].mission.missionFinalized ||
+                            z[userIds[_user][_type][i]]
                                 .mission
                                 .missionTimestamp ==
                             0)) ||
@@ -440,6 +457,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 s[counters[3]] = S(2, Mission(0, 0, 0, false), 0);
             } else if (_targetType == 2) {
                 w[counters[2]] = W(5, Mission(0, 0, 0, false));
+            } else if (_targetType == 6) {
+                z[counters[6]] = Z(Mission(0, 0, 0, false));
             }
             userIds[_user][_targetType].push(counters[_targetType]);
             counters[_targetType]++;
@@ -491,6 +510,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
             m[_id].mission = mission;
         } else if (_targetType == 5) {
             p[_id].mission = mission;
+        } else if (_targetType == 6) {
+            z[_id].mission = mission;
         }
         missionIds[_user][_targetType][_missionId].push(_id);
     }
@@ -513,6 +534,8 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
                 m[ids[i]].mission.missionFinalized = true;
             } else if (_targetType == 5) {
                 p[ids[i]].mission.missionFinalized = true;
+            } else if (_targetType == 6) {
+                z[ids[i]].mission.missionFinalized = true;
             }
         }
         missionStates[_user][_targetType][_id] = MissionState(2);

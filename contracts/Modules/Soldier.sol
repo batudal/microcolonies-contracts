@@ -53,15 +53,6 @@ contract Soldier is Initializable {
     }
 
     function reveal(uint256 _id) public view returns (address target) {
-        uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
-        uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(
-            micro.s(ids[0]).mission.missionTimestamp +
-                micro.schedule().soldierRaid /
-                speed <
-                block.timestamp,
-            "Mission is not over yet."
-        );
         address[] memory participants = otherParticipants(msg.sender);
         uint256 prob = uint256(keccak256(abi.encodePacked(msg.sender, _id))) %
             participants.length;
@@ -70,11 +61,16 @@ contract Soldier is Initializable {
 
     function retreat(uint256 _id) public isSafe(false) {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
+        uint256 killed;
         for (uint256 i; i < ids.length; i++) {
-            if (micro.s(ids[i]).hp > 0) {
-                micro.decreaseHP(3, 3, _id);
+            if (micro.s(ids[i]).hp > 1) {
+                micro.decreaseHP(3, 3, ids[i]);
+            } else {
+                micro.kill(msg.sender, 3, 3, ids[i]);
+                killed++;
             }
         }
+        micro.print(msg.sender, 3, 6, killed);
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
 
@@ -110,16 +106,59 @@ contract Soldier is Initializable {
         }
     }
 
+    function defenders(address _user)
+        public
+        view
+        returns (uint256[] memory defendings)
+    {
+        uint256[] memory ids = micro.getUserIds(_user, 3, true);
+        uint256 defending;
+        for (uint256 i; i < ids.length; i++) {
+            if (
+                micro.s(ids[i]).mission.missionType == 2 &&
+                micro.s(ids[i]).mission.missionTimestamp +
+                    micro.schedule().zombieGuard >
+                block.timestamp
+            ) {
+                defending++;
+            }
+        }
+        defendings = new uint256[](defending);
+        for (uint256 i; i < ids.length; i++) {
+            if (
+                micro.s(ids[i]).mission.missionType == 2 &&
+                micro.s(ids[i]).mission.missionTimestamp +
+                    micro.schedule().zombieGuard >
+                block.timestamp
+            ) {
+                defendings[defending] = ids[i];
+                defending--;
+            }
+        }
+    }
+
     function attack(uint256 _id) public isSafe(false) {
         uint256[] memory soldiers = micro.getMissionIds(msg.sender, 3, _id);
-        uint256[] memory targetSoldiers = micro.getUserIds(
-            reveal(_id),
-            3,
-            true
+        uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
+        require(
+            micro.s(soldiers[0]).mission.missionTimestamp +
+                micro.schedule().soldierRaid /
+                speed <
+                block.timestamp,
+            "Mission is not over yet."
         );
-        uint256[] memory targetLarvae = getIncubating(reveal(_id));
+        address target = reveal(_id);
+        uint256[] memory targetSoldiers = micro.getUserIds(target, 3, true);
+        uint256[] memory targetLarvae = getIncubating(target);
         require(targetLarvae.length > 0, "Target has no larvae.");
-        uint256 reward = battle(soldiers, targetSoldiers, targetLarvae);
+        uint256[] memory targetZombies = defenders(target);
+        uint256 reward = battle(
+            target,
+            soldiers,
+            targetSoldiers,
+            targetLarvae,
+            targetZombies
+        );
         if (reward == 0) {
             micro.finalizeMission(msg.sender, 3, 3, _id);
         }
@@ -130,51 +169,62 @@ contract Soldier is Initializable {
         micro.finalizeMission(msg.sender, 3, 3, _id);
     }
 
-    // integrate zombies
     function battle(
+        address target,
         uint256[] memory attackerSoldiers,
         uint256[] memory targetSoldiers,
-        uint256[] memory targetLarvae
+        uint256[] memory targetLarvae,
+        uint256[] memory targetZombies
     ) public returns (uint256 reward) {
         uint256 attackerSoldierCount = attackerSoldiers.length;
-        uint256 targetSoldierCount = targetSoldiers.length;
-        uint256 targetLarvaeCount = targetLarvae.length;
-        uint256 rollCount = attackerSoldierCount > targetSoldierCount
-            ? targetSoldierCount
+        uint256 targetZombiesCount = targetZombies.length;
+        for (uint256 z; z < targetZombies.length; z++) {
+            if (attackerSoldierCount > 0) {
+                attackerSoldierCount--;
+                micro.kill(target, 3, 6, targetZombies[z]);
+            } else {
+                return (0);
+            }
+            targetZombiesCount--;
+        }
+        uint256 rollCount = attackerSoldierCount > targetSoldiers.length
+            ? targetSoldiers.length
             : attackerSoldierCount;
         uint256[] memory targetRolls = new uint256[](rollCount);
         uint256[] memory attackerRolls = new uint256[](rollCount);
+        uint256 killed;
         for (uint256 j; j < rollCount; j++) {
             nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
             targetRolls[j] = nonce % 100;
             nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
             attackerRolls[j] = nonce % 100;
-            if (micro.s(targetSoldiers[j]).hp > 0) {
+            if (micro.s(targetSoldiers[j]).hp > 1) {
                 micro.decreaseHP(3, 3, targetSoldiers[j]);
+            } else {
+                micro.kill(msg.sender, 3, 3, targetSoldiers[j]);
+                killed++;
             }
         }
+        micro.print(target, 3, 6, killed);
         targetRolls = Quicksort.getDescending(targetRolls);
         attackerRolls = Quicksort.getDescending(attackerRolls);
-        uint256 attackerWins = 0;
         for (uint256 i = 0; i < rollCount; i++) {
             if (attackerRolls[i] > targetRolls[i]) {
-                attackerWins++;
+                reward++;
             }
         }
-        reward += attackerWins;
-        if (attackerSoldierCount > targetSoldierCount) {
+        if (attackerSoldierCount > targetSoldiers.length) {
             uint256 remainingAttacks = attackerSoldierCount -
-                targetSoldierCount;
+                targetSoldiers.length;
             for (uint256 i = 0; i < remainingAttacks; i++) {
                 nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
-                if (nonce % 100 < 100) {
-                    // 80 in production
+                if (nonce % 100 < 80) {
                     reward++;
                 }
             }
         }
-        if (targetLarvaeCount < reward) {
-            reward = targetLarvaeCount;
+        if (targetLarvae.length < reward) {
+            reward = targetLarvae.length;
         }
     }
 
@@ -188,95 +238,6 @@ contract Soldier is Initializable {
                     micro.schedule().lollipopDuration))
                 ? true
                 : false;
-    }
-
-    function harvest(uint256 _amount) public {
-        uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
-        require(_amount <= ids.length, "Not enough soldiers.");
-        uint256 missionId = micro.createMission(msg.sender, 3, 3);
-        micro.earnXp(3, 3, msg.sender, _amount);
-        for (uint256 i; i < ids.length; i++) {
-            if (_amount > 0 && micro.s(ids[i]).hp == 0) {
-                micro.addToMission(msg.sender, 3, 3, 1, ids[i], missionId);
-                _amount--;
-            }
-        }
-    }
-
-    function claimHarvested(uint256 _id) public {
-        uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
-        uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(micro.s(ids[0]).mission.missionTimestamp != 0);
-        require(
-            micro.s(ids[0]).mission.missionTimestamp +
-                micro.schedule().zombieHarvest /
-                speed <
-                block.timestamp
-        );
-        require(
-            !micro.s(ids[0]).mission.missionFinalized,
-            "Mission already is finalized."
-        );
-        for (uint256 i; i < ids.length; i++) {
-            micro.kill(msg.sender, 3, 3, ids[i]);
-        }
-        micro.earnFunghi(
-            3,
-            3,
-            msg.sender,
-            ids.length * micro.tariff().zombieHarvest
-        );
-        micro.finalizeMission(msg.sender, 3, 3, _id);
-    }
-
-    function defend(uint256 _amount) public {
-        uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
-        require(_amount <= ids.length, "Not enough soldiers.");
-        uint256 missionId = micro.createMission(msg.sender, 3, 3);
-        micro.earnXp(3, 3, msg.sender, _amount);
-        for (uint256 i; i < ids.length; i++) {
-            if (_amount > 0 && micro.s(ids[i]).hp == 0) {
-                micro.addToMission(msg.sender, 3, 3, 2, ids[i], missionId);
-                _amount--;
-            }
-        }
-    }
-
-    function defenders() public view returns (uint256[] memory defendings) {
-        uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
-        uint256 defending;
-        for (uint256 i; i < ids.length; i++) {
-            if (
-                micro.s(ids[i]).mission.missionType == 2 &&
-                micro.s(ids[i]).mission.missionTimestamp +
-                    micro.schedule().zombieGuard >
-                block.timestamp
-            ) {
-                defending++;
-            }
-        }
-        defendings = new uint256[](defending);
-        uint256 counter;
-        for (uint256 i; i < ids.length; i++) {
-            if (
-                micro.s(ids[i]).mission.missionType == 2 &&
-                micro.s(ids[i]).mission.missionTimestamp +
-                    micro.schedule().zombieGuard >
-                block.timestamp
-            ) {
-                defendings[counter] = ids[i];
-                counter++;
-            }
-        }
-    }
-
-    function getZombieCount(address _user) public view returns (uint256 count) {
-        uint256[] memory ids = micro.getUserIds(_user, 3, true);
-        for (uint256 i; i < ids.length; i++) {
-            if (micro.s(ids[i]).hp == 0) {
-                count++;
-            }
-        }
     }
 
     function getInfected(address _user) public view returns (uint256 count) {
