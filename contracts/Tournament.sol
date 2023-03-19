@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Interfaces/ITournament.sol";
 import "./Interfaces/IMicroColonies.sol";
 import "./Interfaces/IModule.sol";
+import "./Helpers/QuickStruct.sol";
 
 contract Tournament is Initializable {
     uint256 immutable MAX_APPROVAL = 2**256 - 1;
@@ -21,7 +22,14 @@ contract Tournament is Initializable {
         address zombie;
     }
 
+    enum Mode {
+        FEROMON,
+        FUNGHI,
+        POPULATION
+    }
+
     Contracts public contracts;
+    Mode public mode;
     uint256 public epochDuration;
     uint256 public tournamentDuration;
     string public tournamentTitle;
@@ -38,14 +46,13 @@ contract Tournament is Initializable {
 
     mapping(address => string) public nicknames;
 
-    // x -> 112x (epoch -> tournament)
-
     function initialize(
         string memory _tournamentTitle,
         uint256 _entranceFee,
         address _currencyToken,
         uint256 _epochDuration,
         uint256 _startDate,
+        Mode _mode,
         address[] calldata _implementations
     ) public initializer {
         tournamentTitle = _tournamentTitle;
@@ -54,6 +61,7 @@ contract Tournament is Initializable {
         currencyToken = _currencyToken;
         entranceFee = _entranceFee;
         startDate = _startDate;
+        mode = _mode;
 
         contracts.microColonies = Clones.clone(_implementations[0]);
         IMicroColonies(contracts.microColonies).initialize(_epochDuration);
@@ -118,4 +126,55 @@ contract Tournament is Initializable {
     {
         nickname = nicknames[_user];
     }
+
+    function scoreboard() public {}
+
+    function sum(uint256[] memory data) internal pure returns (uint256) {
+        uint256 total;
+        for (uint256 i = 0; i < data.length; ++i) {
+            total += data[i];
+        }
+        return total;
+    }
+
+    function getPlacement(address _user, uint256 _mode)
+        public
+        view
+        returns (uint256)
+    {
+        QuickStruct.Participant[] memory ps = new QuickStruct.Participant[](
+            participants.length
+        );
+        for (uint256 i = 0; i < participants.length; ++i) {
+            if (_mode == 0) {
+                // feromon
+                ps[i].p_address = participants[i];
+                ps[i].p_score = IMicroColonies(contracts.microColonies)
+                    .feromonBalance(participants[i]);
+            } else if (_mode == 1) {
+                ps[i].p_address = participants[i];
+                ps[i].p_score = IMicroColonies(contracts.microColonies)
+                    .funghiBalance(participants[i]);
+            } else if (_mode == 2) {
+                ps[i].p_address = participants[i];
+                uint256 total;
+                for (uint256 j = 0; j <= 6; ++j) {
+                    total += sum(
+                        IMicroColonies(contracts.microColonies).counters(i)
+                    );
+                }
+                ps[i].p_score = total;
+            }
+        }
+        QuickStruct.Participant[] memory descending = QuickStruct
+            .getDescendingStruct(ps);
+        for (uint256 i = 0; i < descending.length; ++i) {
+            if (descending[i].p_address == _user) {
+                return i++;
+            }
+        }
+        return 0;
+    }
+
+    function claimReward() public {}
 }

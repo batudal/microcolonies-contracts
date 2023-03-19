@@ -97,6 +97,8 @@ interface IMicroColonies {
 
     function funghiBalance(address) external view returns (uint256 balance);
 
+    function counters(uint256) external view returns (uint256[] calldata);
+
     function feromonBalance(address) external view returns (uint256 balance);
 
     function createMission(address _user, uint256 _target)

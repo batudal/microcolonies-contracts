@@ -114,24 +114,32 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     }
 
     modifier checkAccess(address _module, uint256 _target) {
-        if (_module != address(tournament)) {
-            _checkAccess(_module, _target);
-        }
+        _checkAccess(_module, _target);
         _;
     }
 
-    function _checkAccess(address _module, uint256 _target)
-        public
-        view
-        virtual
-    {
-        bool passed;
-        for (uint256 i; i < access[_module].length; i++) {
-            if (access[_module][i] == _target) {
-                passed = true;
+    function _checkAccess(address _module, uint256 _target) internal view {
+        if (_module != address(tournament)) {
+            bool passed;
+            for (uint256 i; i < access[_module].length; i++) {
+                if (access[_module][i] == _target) {
+                    passed = true;
+                }
             }
+            require(passed);
         }
-        require(passed);
+    }
+
+    modifier checkState() {
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
     }
 
     function initialize(uint256 _epoch) external initializer {
@@ -336,13 +344,14 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     function setNonce(uint256 _target)
         public
         checkAccess(msg.sender, _target)
+        checkState
         returns (uint256 nextNonce)
     {
         nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
         nextNonce = nonce;
     }
 
-    function openPack(address _user) public {
+    function openPack(address _user) public checkState {
         require(msg.sender == address(tournament), "Only tournament can call.");
         increaseCapacity(0, _user, 20);
         print(_user, 1, 19);
@@ -352,7 +361,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         feromonBalance[_user] = 100000; // remove at production!
     }
 
-    function useLollipop() public {
+    function useLollipop() public checkState {
         require(!lollipops[msg.sender].used);
         lollipops[msg.sender].used = true;
         lollipops[msg.sender].timestamp = block.timestamp;
@@ -374,7 +383,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         address _user,
         uint256 _target,
         uint256 _id
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         uint256 index = findIndex(_user, _target, _id);
         if (userIds[_user][_target].length > 0) {
             userIds[_user][_target][index] = userIds[_user][_target][
@@ -391,7 +400,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         address _user,
         uint256 _target,
         uint256 _amount
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         if (_target != 1) {
             require(
                 _amount <= (capacity[_user] - nested[_user]),
@@ -425,6 +434,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     function createMission(address _user, uint256 _target)
         public
         checkAccess(msg.sender, _target)
+        checkState
         returns (uint256 highest)
     {
         if (userMissions[_user][_target].length > 0) {
@@ -446,7 +456,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _missionType,
         uint256 _id,
         uint256 _missionId
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         Mission memory mission = Mission(
             _missionId,
             _missionType,
@@ -473,7 +483,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         address _user,
         uint256 _target,
         uint256 _id
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         uint256[] memory ids = getMissionIds(_user, _target, _id);
         for (uint256 i; i < ids.length; i++) {
             if (_target == 1) {
@@ -497,7 +507,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         feromonBalance[_user] += _amount;
     }
 
@@ -505,7 +515,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(msg.sender, _target) {
+    ) public checkAccess(msg.sender, _target) checkState {
         funghiBalance[_user] += _amount;
     }
 
