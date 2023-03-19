@@ -72,7 +72,7 @@ struct Inhibition {
 }
 
 interface IMicroColonies {
-    function openPack(address _user, uint256 _pack) external;
+    function openPack(address _user) external;
 
     function lollipops(address _user)
         external
@@ -99,40 +99,31 @@ interface IMicroColonies {
 
     function feromonBalance(address) external view returns (uint256 balance);
 
-    function createMission(
-        address _user,
-        uint256 _type,
-        uint256 _targetType
-    ) external returns (uint256 missionId);
+    function createMission(address _user, uint256 _target)
+        external
+        returns (uint256 missionId);
 
     function addToMission(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _missionType,
         uint256 _id,
         uint256 _missionId
     ) external;
 
     function earnXp(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
     ) external;
 
     function earnFunghi(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
     ) external;
 
-    function decreaseHP(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) external;
+    function decreaseHP(uint256 _target, uint256 _id) external;
 
     function isBoosted(
         address _user,
@@ -142,21 +133,18 @@ interface IMicroColonies {
 
     function kill(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id
     ) external;
 
     function print(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _amount
     ) external;
 
     function increaseCapacity(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
     ) external;
@@ -183,8 +171,7 @@ interface IMicroColonies {
     function p(uint256 _id) external view returns (P calldata p);
 
     function addEggs(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id,
         uint256 _amount
     ) external;
@@ -196,15 +183,13 @@ interface IMicroColonies {
     ) external;
 
     function spendFunghi(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
     ) external;
 
     function spendFeromon(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
     ) external;
@@ -215,9 +200,7 @@ interface IMicroColonies {
 
     function nested(address _user) external view returns (uint256 capacity);
 
-    function setNonce(uint256 _type, uint256 _targetType)
-        external
-        returns (uint256 nextNonce);
+    function setNonce(uint256 _target) external returns (uint256 nextNonce);
 
     function participants()
         external
@@ -231,8 +214,7 @@ interface IMicroColonies {
 
     function finalizeMission(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id
     ) external;
 
@@ -241,36 +223,13 @@ interface IMicroColonies {
         view
         returns (uint256[] memory ids);
 
-    function matingBoost(
-        address _user,
-        uint256 _type,
-        uint256 _targetType
-    ) external;
+    function matingBoost(address _user, uint256 _target) external;
 
-    function inhibit(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _epochs,
-        bool _deploy
-    ) external;
+    function initialize(uint256 _epoch) external;
 
-    function inhibitions(uint256 _type)
-        external
-        view
-        returns (Inhibition calldata);
+    function queenLevelup(uint256 _id, uint256 _target) external;
 
-    function initialize(uint256 _epoch, address[] calldata _participants)
-        external;
+    function healSoldier(uint256 _target, uint256 _id) external;
 
-    function queenLevelup(
-        uint256 _id,
-        uint256 _type,
-        uint256 _targetType
-    ) external;
-
-    function healSoldier(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) external;
+    function setAccess(address _module, uint256[] calldata _targets) external;
 }

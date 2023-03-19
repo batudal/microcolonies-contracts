@@ -32,11 +32,11 @@ contract Zombie is Initializable {
     function harvest(uint256 _amount) public {
         uint256[] memory ids = micro.getUserIds(msg.sender, 6, true);
         require(_amount <= ids.length, "Not enough zombies.");
-        uint256 missionId = micro.createMission(msg.sender, 6, 6);
-        micro.earnXp(3, 3, msg.sender, _amount);
+        uint256 missionId = micro.createMission(msg.sender, 6);
+        micro.earnXp(3, msg.sender, _amount);
         for (uint256 i; i < ids.length; i++) {
             if (_amount > 0) {
-                micro.addToMission(msg.sender, 6, 6, 0, ids[i], missionId);
+                micro.addToMission(msg.sender, 6, 0, ids[i], missionId);
                 _amount--;
             }
         }
@@ -57,25 +57,24 @@ contract Zombie is Initializable {
             "Mission already is finalized."
         );
         for (uint256 i; i < ids.length; i++) {
-            micro.kill(msg.sender, 6, 6, ids[i]);
+            micro.kill(msg.sender, 6, ids[i]);
         }
         micro.earnFunghi(
-            6,
             6,
             msg.sender,
             ids.length * micro.tariff().zombieHarvest
         );
-        micro.finalizeMission(msg.sender, 6, 6, _id);
+        micro.finalizeMission(msg.sender, 6, _id);
     }
 
     function defend(uint256 _amount) public {
         uint256[] memory ids = micro.getUserIds(msg.sender, 6, true);
         require(_amount <= ids.length, "Not enough zombies.");
-        uint256 missionId = micro.createMission(msg.sender, 6, 6);
-        micro.earnXp(3, 3, msg.sender, _amount);
+        uint256 missionId = micro.createMission(msg.sender, 6);
+        micro.earnXp(3, msg.sender, _amount);
         for (uint256 i; i < ids.length; i++) {
             if (_amount > 0) {
-                micro.addToMission(msg.sender, 6, 6, 1, ids[i], missionId);
+                micro.addToMission(msg.sender, 6, 1, ids[i], missionId);
                 _amount--;
             }
         }

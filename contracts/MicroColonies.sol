@@ -75,12 +75,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         bool missionFinalized;
     }
 
-    struct Inhibition {
-        uint256 start;
-        uint256 end;
-        bool deploy;
-    }
-
     enum MissionState {
         NULL,
         INITIALIZED,
@@ -101,9 +95,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     mapping(address => uint256) public feromonBalance;
     mapping(address => uint256) public capacity;
     mapping(address => uint256) public nested;
-    mapping(uint256 => uint256[]) public access;
-    mapping(uint256 => address) public modules;
-    mapping(uint256 => Inhibition) public inhibitions;
+    mapping(address => uint256[]) public access;
 
     /// @dev QLWSMPZ(0123456) => counter;
     mapping(uint256 => uint256) counters;
@@ -121,35 +113,29 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         _;
     }
 
-    modifier checkAccess(uint256 _type, uint256 _targetType) {
-        // _checkAccess(_type, _targetType);
+    modifier checkAccess(address _module, uint256 _target) {
+        if (_module != address(tournament)) {
+            _checkAccess(_module, _target);
+        }
         _;
     }
 
-    // function _checkAccess(uint256 _type, uint256 _targetType)
-    //     public
-    //     view
-    //     virtual
-    // {
-    //     bool passed;
-    //     for (uint256 i; i < access[_type].length; i++) {
-    //         if (access[_type][i] == _targetType) {
-    //             passed = true;
-    //         }
-    //     }
-    //     if (_type == _targetType) {
-    //         passed = true;
-    //     }
-    //     require(passed);
-    // }
-
-    // initializer
-    function initialize(uint256 _epoch, address[] calldata _participants)
-        external
-        initializer
+    function _checkAccess(address _module, uint256 _target)
+        public
+        view
+        virtual
     {
+        bool passed;
+        for (uint256 i; i < access[_module].length; i++) {
+            if (access[_module][i] == _target) {
+                passed = true;
+            }
+        }
+        require(passed);
+    }
+
+    function initialize(uint256 _epoch) external initializer {
         tournament = ITournament(msg.sender);
-        participants = _participants;
         schedule.epoch = _epoch;
         schedule.workerFarm = 1;
         schedule.workerBuild = 5;
@@ -171,19 +157,16 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.buildReward = 5;
         tariff.soldierHeal = 80;
         nonce = 42;
+        __Ownable_init();
     }
 
-    // admin fxns
-    function setAccess(
-        uint256 _moduleId,
-        address _moduleAddr,
-        uint256[] calldata _targetAddrs
-    ) public onlyOwner {
-        access[_moduleId] = _targetAddrs;
-        modules[_moduleId] = _moduleAddr;
+    function setAccess(address _module, uint256[] calldata _targets)
+        public
+        onlyOwner
+    {
+        access[_module] = _targets;
     }
 
-    // view fxn
     function getParticipants()
         public
         view
@@ -350,28 +333,20 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         return false;
     }
 
-    // mutate fxn
-    function setNonce(uint256 _type, uint256 _targetType)
+    function setNonce(uint256 _target)
         public
-        checkAccess(_type, _targetType)
+        checkAccess(msg.sender, _target)
         returns (uint256 nextNonce)
     {
         nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
         nextNonce = nonce;
     }
 
-    function openPack(address _user, uint256 _pack) public {
+    function openPack(address _user) public {
         require(msg.sender == address(tournament), "Only tournament can call.");
-        increaseCapacity(0, 0, _user, 20);
-        if (_pack == 0) {
-            print(_user, 1, 1, 20);
-        } else if (_pack == 1) {
-            print(_user, 0, 1, 15);
-            print(_user, 0, 5, 1);
-        } else if (_pack == 2) {
-            print(_user, 0, 1, 10);
-            print(_user, 0, 0, 1);
-        }
+        increaseCapacity(0, _user, 20);
+        print(_user, 1, 19);
+        print(_user, 0, 1);
         funghiBalance[_user] = 100000; // remove at production!
         feromonBalance[_user] = 100000; // remove at production!
     }
@@ -383,23 +358,11 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     }
 
     // princess + male
-    function matingBoost(
-        address _user,
-        uint256 _type,
-        uint256 _targetType
-    ) public checkAccess(_type, _targetType) {
+    function matingBoost(address _user, uint256 _target)
+        public
+        checkAccess(msg.sender, _target)
+    {
         lollipops[_user].timestamp = block.timestamp;
-    }
-
-    function inhibit(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _epochs,
-        bool _deploy
-    ) public checkAccess(_type, _targetType) {
-        inhibitions[_targetType].start = block.timestamp;
-        inhibitions[_targetType].end = _epochs * tournament.epochDuration();
-        inhibitions[_targetType].deploy = _deploy;
     }
 
     function findIndex(
@@ -416,235 +379,219 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
 
     function kill(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id
-    ) public checkAccess(_type, _targetType) {
-        uint256 index = findIndex(_user, _targetType, _id);
-        if (userIds[_user][_targetType].length > 0) {
-            userIds[_user][_targetType][index] = userIds[_user][_targetType][
-                userIds[_user][_targetType].length - 1
+    ) public checkAccess(msg.sender, _target) {
+        uint256 index = findIndex(_user, _target, _id);
+        if (userIds[_user][_target].length > 0) {
+            userIds[_user][_target][index] = userIds[_user][_target][
+                userIds[_user][_target].length - 1
             ];
         }
-        userIds[_user][_targetType].pop();
-        if (_targetType != 1) {
+        userIds[_user][_target].pop();
+        if (_target != 1) {
             nested[_user]--;
         }
     }
 
     function print(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
-        if (_targetType != 1) {
+    ) public checkAccess(msg.sender, _target) {
+        if (_target != 1) {
             require(
                 _amount <= (capacity[_user] - nested[_user]),
                 "You don't have enough nest capacity."
             );
         }
         for (uint256 i; i < _amount; i++) {
-            if (_targetType == 0) {
+            if (_target == 0) {
                 q[counters[0]] = Q(1, 0, block.timestamp);
-            } else if (_targetType == 1) {
+            } else if (_target == 1) {
                 l[counters[1]] = L(Mission(0, 0, 0, false));
-            } else if (_targetType == 5) {
+            } else if (_target == 5) {
                 p[counters[5]] = P(Mission(0, 0, 0, false));
-            } else if (_targetType == 4) {
+            } else if (_target == 4) {
                 m[counters[4]] = M(Mission(0, 0, 0, false));
-            } else if (_targetType == 3) {
+            } else if (_target == 3) {
                 s[counters[3]] = S(2, Mission(0, 0, 0, false), 0);
-            } else if (_targetType == 2) {
+            } else if (_target == 2) {
                 w[counters[2]] = W(5, Mission(0, 0, 0, false));
-            } else if (_targetType == 6) {
+            } else if (_target == 6) {
                 z[counters[6]] = Z(Mission(0, 0, 0, false));
             }
-            userIds[_user][_targetType].push(counters[_targetType]);
-            counters[_targetType]++;
-            if (_targetType != 1) {
+            userIds[_user][_target].push(counters[_target]);
+            counters[_target]++;
+            if (_target != 1) {
                 nested[_user]++;
             }
         }
     }
 
-    function createMission(
-        address _user,
-        uint256 _type,
-        uint256 _targetType
-    ) public checkAccess(_type, _targetType) returns (uint256 highest) {
-        if (userMissions[_user][_targetType].length > 0) {
+    function createMission(address _user, uint256 _target)
+        public
+        checkAccess(msg.sender, _target)
+        returns (uint256 highest)
+    {
+        if (userMissions[_user][_target].length > 0) {
             highest =
-                userMissions[_user][_targetType][
-                    userMissions[_user][_targetType].length - 1
+                userMissions[_user][_target][
+                    userMissions[_user][_target].length - 1
                 ] +
                 1;
         } else {
             highest = 1;
         }
-        missionStates[_user][_targetType][highest] = MissionState(1);
-        userMissions[_user][_targetType].push(highest);
+        missionStates[_user][_target][highest] = MissionState(1);
+        userMissions[_user][_target].push(highest);
     }
 
+    // access: soldier, larva, worker, princess, zombie
     function addToMission(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _missionType,
         uint256 _id,
         uint256 _missionId
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         Mission memory mission = Mission(
             _missionId,
             _missionType,
             block.timestamp,
             false
         );
-        if (_targetType == 1) {
+        if (_target == 1) {
             l[_id].mission = mission;
-        } else if (_targetType == 2) {
+        } else if (_target == 2) {
             w[_id].mission = mission;
-        } else if (_targetType == 3) {
+        } else if (_target == 3) {
             s[_id].mission = mission;
-        } else if (_targetType == 4) {
+        } else if (_target == 4) {
             m[_id].mission = mission;
-        } else if (_targetType == 5) {
+        } else if (_target == 5) {
             p[_id].mission = mission;
-        } else if (_targetType == 6) {
+        } else if (_target == 6) {
             z[_id].mission = mission;
         }
-        missionIds[_user][_targetType][_missionId].push(_id);
+        missionIds[_user][_target][_missionId].push(_id);
     }
 
+    // access: larva, zombie, worker, soldier
     function finalizeMission(
         address _user,
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id
-    ) public checkAccess(_type, _targetType) {
-        uint256[] memory ids = getMissionIds(_user, _targetType, _id);
+    ) public checkAccess(msg.sender, _target) {
+        uint256[] memory ids = getMissionIds(_user, _target, _id);
         for (uint256 i; i < ids.length; i++) {
-            if (_targetType == 1) {
+            if (_target == 1) {
                 l[ids[i]].mission.missionFinalized = true;
-            } else if (_targetType == 2) {
+            } else if (_target == 2) {
                 w[ids[i]].mission.missionFinalized = true;
-            } else if (_targetType == 3) {
+            } else if (_target == 3) {
                 s[ids[i]].mission.missionFinalized = true;
-            } else if (_targetType == 4) {
+            } else if (_target == 4) {
                 m[ids[i]].mission.missionFinalized = true;
-            } else if (_targetType == 5) {
+            } else if (_target == 5) {
                 p[ids[i]].mission.missionFinalized = true;
-            } else if (_targetType == 6) {
+            } else if (_target == 6) {
                 z[ids[i]].mission.missionFinalized = true;
             }
         }
-        missionStates[_user][_targetType][_id] = MissionState(2);
+        missionStates[_user][_target][_id] = MissionState(2);
     }
 
+    // access: worker, queen, princess, zombie, larva, soldier
     function earnXp(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         feromonBalance[_user] += _amount;
     }
 
-    // worker farm + zombie harvest
+    // access: worker, zombie
     function earnFunghi(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         funghiBalance[_user] += _amount;
     }
 
+    // access: queen, larva, soldier
     function spendFunghi(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         funghiBalance[_user] -= _amount;
     }
 
+    // access: queen
     function spendFeromon(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         feromonBalance[_user] -= _amount;
     }
 
-    // queen-only
-    function resetQueen(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) public checkAccess(_type, _targetType) {
+    // access: queen
+    function resetQueen(uint256 _target, uint256 _id)
+        public
+        checkAccess(msg.sender, _target)
+    {
         q[_id].timestamp = block.timestamp;
         q[_id].eggs = 0;
     }
 
+    // access: self, worker
     function increaseCapacity(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         address _user,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         capacity[_user] += _amount;
     }
 
-    function decreaseCapacity(
-        uint256 _type,
-        uint256 _targetType,
-        address _user,
-        uint256 _amount
-    ) public checkAccess(_type, _targetType) {
-        capacity[_user] -= _amount;
-    }
-
-    // worker + soldier
-    function decreaseHP(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) public checkAccess(_type, _targetType) {
-        if (_targetType == 2) {
+    // access: worker, soldier
+    function decreaseHP(uint256 _target, uint256 _id)
+        public
+        checkAccess(msg.sender, _target)
+    {
+        if (_target == 2) {
             require(w[_id].hp > 0, "Worker is dead already.");
             w[_id].hp--;
-        } else if (_targetType == 3) {
+        } else if (_target == 3) {
             require(s[_id].hp > 0, "Soldier is dead already.");
             s[_id].hp--;
         }
     }
 
-    // queen-only
+    // access: queen
     function addEggs(
-        uint256 _type,
-        uint256 _targetType,
+        uint256 _target,
         uint256 _id,
         uint256 _amount
-    ) public checkAccess(_type, _targetType) {
+    ) public checkAccess(msg.sender, _target) {
         q[_id].eggs += _amount;
     }
 
-    function queenLevelup(
-        uint256 _id,
-        uint256 _type,
-        uint256 _targetType
-    ) public checkAccess(_type, _targetType) {
+    // access: queen
+    function queenLevelup(uint256 _id, uint256 _target)
+        public
+        checkAccess(msg.sender, _target)
+    {
         q[_id].level++;
     }
 
-    // soldier-only
-    function healSoldier(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) public checkAccess(_type, _targetType) {
+    // access: soldier
+    function healSoldier(uint256 _target, uint256 _id)
+        public
+        checkAccess(msg.sender, _target)
+    {
         s[_id].hp == 2;
         s[_id].damageTimestamp = 0;
     }

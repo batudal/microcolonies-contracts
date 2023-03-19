@@ -21,11 +21,11 @@ contract Soldier is Initializable {
     function scout(uint256 _amount) public {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
         require(_amount <= ids.length, "Not enough soldiers.");
-        uint256 missionId = micro.createMission(msg.sender, 3, 3);
+        uint256 missionId = micro.createMission(msg.sender, 3);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(msg.sender, 3, 3, 0, ids[i], missionId);
+            micro.addToMission(msg.sender, 3, 0, ids[i], missionId);
         }
-        micro.earnXp(3, 3, msg.sender, _amount);
+        micro.earnXp(3, msg.sender, _amount);
     }
 
     function otherParticipants(address _user)
@@ -56,14 +56,14 @@ contract Soldier is Initializable {
         uint256 killed;
         for (uint256 i; i < ids.length; i++) {
             if (micro.s(ids[i]).hp > 1) {
-                micro.decreaseHP(3, 3, ids[i]);
+                micro.decreaseHP(3, ids[i]);
             } else {
-                micro.kill(msg.sender, 3, 3, ids[i]);
+                micro.kill(msg.sender, 3, ids[i]);
                 killed++;
             }
         }
-        micro.print(msg.sender, 3, 6, killed);
-        micro.finalizeMission(msg.sender, 3, 3, _id);
+        micro.print(msg.sender, 6, killed);
+        micro.finalizeMission(msg.sender, 3, _id);
     }
 
     function getIncubating(address _user)
@@ -152,13 +152,13 @@ contract Soldier is Initializable {
             targetZombies
         );
         if (reward == 0) {
-            micro.finalizeMission(msg.sender, 3, 3, _id);
+            micro.finalizeMission(msg.sender, 3, _id);
         }
         for (uint256 i; i < reward; i++) {
-            micro.kill(reveal(_id), 3, 1, targetLarvae[i]);
+            micro.kill(reveal(_id), 1, targetLarvae[i]);
         }
-        micro.print(msg.sender, 3, 1, reward);
-        micro.finalizeMission(msg.sender, 3, 3, _id);
+        micro.print(msg.sender, 1, reward);
+        micro.finalizeMission(msg.sender, 3, _id);
     }
 
     function battle(
@@ -173,7 +173,7 @@ contract Soldier is Initializable {
         for (uint256 z; z < targetZombies.length; z++) {
             if (attackerSoldierCount > 0) {
                 attackerSoldierCount--;
-                micro.kill(target, 3, 6, targetZombies[z]);
+                micro.kill(target, 6, targetZombies[z]);
             } else {
                 return (0);
             }
@@ -191,13 +191,13 @@ contract Soldier is Initializable {
             nonce = uint256(keccak256(abi.encodePacked(msg.sender, nonce)));
             attackerRolls[j] = nonce % 100;
             if (micro.s(targetSoldiers[j]).hp > 1) {
-                micro.decreaseHP(3, 3, targetSoldiers[j]);
+                micro.decreaseHP(3, targetSoldiers[j]);
             } else {
-                micro.kill(msg.sender, 3, 3, targetSoldiers[j]);
+                micro.kill(msg.sender, 3, targetSoldiers[j]);
                 killed++;
             }
         }
-        micro.print(target, 3, 6, killed);
+        micro.print(target, 6, killed);
         targetRolls = Quicksort.getDescending(targetRolls);
         attackerRolls = Quicksort.getDescending(attackerRolls);
         for (uint256 i = 0; i < rollCount; i++) {
@@ -254,11 +254,10 @@ contract Soldier is Initializable {
             if (micro.s(ids[i]).hp == 1 && _amount > 0) {
                 micro.spendFunghi(
                     3,
-                    3,
                     msg.sender,
                     _amount * micro.tariff().soldierHeal
                 );
-                micro.healSoldier(3, 3, ids[i]);
+                micro.healSoldier(3, ids[i]);
                 _amount--;
             }
         }

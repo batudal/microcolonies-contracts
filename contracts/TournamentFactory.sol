@@ -3,14 +3,16 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./Tournament.sol";
-import "hardhat/console.sol";
 
 contract TournamentFactory is Initializable {
     Tournament[] public tournaments;
     address[] public implementations;
     mapping(address => address[]) public userTournaments;
 
-    function initialize(address[] calldata _implementations) public initializer {
+    function initialize(address[] calldata _implementations)
+        public
+        initializer
+    {
         // require(_implementations.length == 7);
         for (uint256 i = 0; i < _implementations.length; i++) {
             implementations.push(_implementations[i]);
@@ -19,7 +21,6 @@ contract TournamentFactory is Initializable {
 
     function createTournament(
         string memory title,
-        address[] memory participants,
         uint256 entranceFee,
         address currencyToken,
         uint256 epochDuration,
@@ -28,7 +29,6 @@ contract TournamentFactory is Initializable {
         Tournament tournament = new Tournament();
         tournament.initialize(
             title,
-            participants,
             entranceFee,
             currencyToken,
             epochDuration,
@@ -36,9 +36,6 @@ contract TournamentFactory is Initializable {
             implementations
         );
         tournaments.push(tournament);
-        for (uint256 i = 0; i < participants.length; i++) {
-            userTournaments[participants[i]].push(address(tournament));
-        }
     }
 
     function getTournaments() public view returns (Tournament[] memory) {
