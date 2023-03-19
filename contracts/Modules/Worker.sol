@@ -3,16 +3,32 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../Interfaces/IMicroColonies.sol";
+import "../Interfaces/ITournament.sol";
 
 contract Worker is Initializable {
     IMicroColonies private micro;
+    ITournament public tournament;
+
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
 
     function initialize(address _micro) external initializer {
+        tournament = ITournament(msg.sender);
         micro = IMicroColonies(_micro);
     }
 
     // worker fxns
-    function convert(uint256 _amount) public {
+    function convert(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 2, true);
         require(_amount <= ids.length, "Not enough workers.");
         require(
@@ -27,7 +43,7 @@ contract Worker is Initializable {
         micro.earnXp(2, msg.sender, _amount);
     }
 
-    function claimConverted(uint256 _id) public {
+    function claimConverted(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
         uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(ids[0]).mission.missionTimestamp != 0);
@@ -45,7 +61,7 @@ contract Worker is Initializable {
         micro.finalizeMission(msg.sender, 2, _id);
     }
 
-    function farm(uint256 _amount) public {
+    function farm(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 2, true);
         require(_amount <= ids.length, "Not enough workers.");
         uint256 missionId = micro.createMission(msg.sender, 2);
@@ -55,7 +71,7 @@ contract Worker is Initializable {
         micro.earnXp(2, msg.sender, _amount);
     }
 
-    function claimFarmed(uint256 _id) public {
+    function claimFarmed(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
         uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(
@@ -76,7 +92,7 @@ contract Worker is Initializable {
         micro.finalizeMission(msg.sender, 2, _id);
     }
 
-    function build(uint256 _amount) public {
+    function build(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 2, true);
         require(_amount <= ids.length, "Not enough workers.");
         uint256 missionId = micro.createMission(msg.sender, 2);
@@ -86,7 +102,7 @@ contract Worker is Initializable {
         micro.earnXp(2, msg.sender, _amount);
     }
 
-    function claimBuilt(uint256 _id) public {
+    function claimBuilt(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 2, _id);
         uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.w(ids[0]).mission.missionTimestamp != 0);
@@ -114,14 +130,13 @@ contract Worker is Initializable {
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
         uint256 id = micro.getMissionIds(_user, 2, _id)[0];
-        return false;
-        // return
-        //     (micro.w(id).mission.missionTimestamp >
-        //         micro.lollipops(_user).timestamp &&
-        //         micro.w(id).mission.missionTimestamp <=
-        //         (micro.lollipops(_user).timestamp +
-        //             micro.schedule().lollipopDuration))
-        //         ? true
-        //         : false;
+        return
+            (micro.w(id).mission.missionTimestamp >
+                micro.lollipops(_user).timestamp &&
+                micro.w(id).mission.missionTimestamp <=
+                (micro.lollipops(_user).timestamp +
+                    micro.schedule().lollipopDuration))
+                ? true
+                : false;
     }
 }

@@ -11,6 +11,19 @@ contract Queen is Initializable {
     ITournament private tournament;
     uint256[3] public fert;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
+
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
@@ -38,14 +51,14 @@ contract Queen is Initializable {
         }
     }
 
-    function claimAllEggs() public {
+    function claimAllEggs() public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 0, false);
         for (uint256 i; i < ids.length; i++) {
             claimEggs(ids[i]);
         }
     }
 
-    function claimEggs(uint256 _id) public {
+    function claimEggs(uint256 _id) public checkState {
         uint256 deserved = eggsLaid(_id) - micro.q(_id).eggs;
         if (deserved > 0) {
             micro.addEggs(0, _id, deserved);
@@ -66,7 +79,7 @@ contract Queen is Initializable {
         }
     }
 
-    function feedQueen(uint256 _id) public {
+    function feedQueen(uint256 _id) public checkState {
         claimEggs(_id);
         uint256 epochs = (block.timestamp - micro.q(_id).timestamp) /
             tournament.epochDuration();
@@ -79,7 +92,7 @@ contract Queen is Initializable {
         micro.earnXp(0, msg.sender, epochs);
     }
 
-    function queenUpgrade(uint256 _id) public {
+    function queenUpgrade(uint256 _id) public checkState {
         uint256 amount = micro.q(_id).level == 1
             ? micro.tariff().queenUpgrade
             : micro.tariff().queenUpgrade * 3;

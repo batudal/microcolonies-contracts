@@ -11,6 +11,19 @@ contract Zombie is Initializable {
     ITournament private tournament;
     uint256 private nonce;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
+
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
@@ -29,7 +42,7 @@ contract Zombie is Initializable {
                 : false;
     }
 
-    function harvest(uint256 _amount) public {
+    function harvest(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 6, true);
         require(_amount <= ids.length, "Not enough zombies.");
         uint256 missionId = micro.createMission(msg.sender, 6);
@@ -42,7 +55,7 @@ contract Zombie is Initializable {
         }
     }
 
-    function claimHarvested(uint256 _id) public {
+    function claimHarvested(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 6, _id);
         uint8 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(micro.z(ids[0]).mission.missionTimestamp != 0);
@@ -67,7 +80,7 @@ contract Zombie is Initializable {
         micro.finalizeMission(msg.sender, 6, _id);
     }
 
-    function defend(uint256 _amount) public {
+    function defend(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 6, true);
         require(_amount <= ids.length, "Not enough zombies.");
         uint256 missionId = micro.createMission(msg.sender, 6);

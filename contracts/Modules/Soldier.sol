@@ -11,6 +11,19 @@ contract Soldier is Initializable {
     ITournament private tournament;
     uint256 private nonce;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
+
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
@@ -18,7 +31,7 @@ contract Soldier is Initializable {
     }
 
     // integrate infection
-    function scout(uint256 _amount) public {
+    function scout(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 3, true);
         require(_amount <= ids.length, "Not enough soldiers.");
         uint256 missionId = micro.createMission(msg.sender, 3);
@@ -51,7 +64,7 @@ contract Soldier is Initializable {
         target = participants[prob];
     }
 
-    function retreat(uint256 _id) public {
+    function retreat(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 3, _id);
         uint256 killed;
         for (uint256 i; i < ids.length; i++) {
@@ -129,7 +142,7 @@ contract Soldier is Initializable {
         }
     }
 
-    function attack(uint256 _id) public {
+    function attack(uint256 _id) public checkState {
         uint256[] memory soldiers = micro.getMissionIds(msg.sender, 3, _id);
         uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
         require(
@@ -167,7 +180,7 @@ contract Soldier is Initializable {
         uint256[] memory targetSoldiers,
         uint256[] memory targetLarvae,
         uint256[] memory targetZombies
-    ) public returns (uint256 reward) {
+    ) public checkState returns (uint256 reward) {
         uint256 attackerSoldierCount = attackerSoldiers.length;
         uint256 targetZombiesCount = targetZombies.length;
         for (uint256 z; z < targetZombies.length; z++) {
@@ -241,7 +254,7 @@ contract Soldier is Initializable {
         }
     }
 
-    function healSoldiers(uint256 _amount) public {
+    function healSoldiers(uint256 _amount) public checkState {
         require(_amount > 0);
         uint256 infected = getInfected(msg.sender);
         require(infected >= _amount);

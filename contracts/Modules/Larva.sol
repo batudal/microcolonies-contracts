@@ -9,25 +9,36 @@ contract Larva is Initializable {
     IMicroColonies private micro;
     ITournament private tournament;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
+
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
     }
 
-    function isBoosted(address _user, uint256 _id) public pure returns (bool) {
-        // uint256[] memory ids = micro.getMissionIds(_user, 1, _id);
-        return false;
-        // return
-        //     (micro.l(id).mission.missionTimestamp >
-        //         micro.lollipops(_user).timestamp &&
-        //         micro.l(id).mission.missionTimestamp <=
-        //         (micro.lollipops(_user).timestamp +
-        //             micro.schedule().lollipopDuration))
-        //         ? true
-        //         : false;
+    function isBoosted(address _user, uint256 _id) public view returns (bool) {
+        return
+            (micro.l(_id).mission.missionTimestamp >
+                micro.lollipops(_user).timestamp &&
+                micro.l(_id).mission.missionTimestamp <=
+                (micro.lollipops(_user).timestamp +
+                    micro.schedule().lollipopDuration))
+                ? true
+                : false;
     }
 
-    function incubate(uint256 _amount, uint256 _feedAmount) public {
+    function incubate(uint256 _amount, uint256 _feedAmount) public checkState {
         uint256[] memory larvae = micro.getUserIds(msg.sender, 1, true);
         require(_amount <= larvae.length, "Not enough larvae");
         require(
@@ -58,7 +69,7 @@ contract Larva is Initializable {
         micro.earnXp(1, msg.sender, _amount);
     }
 
-    function hatch(uint256 _id) public {
+    function hatch(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 1, _id);
         require(
             ids.length <= micro.capacity(msg.sender) - micro.nested(msg.sender),

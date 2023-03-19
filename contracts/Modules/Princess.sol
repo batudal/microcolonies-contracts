@@ -13,12 +13,25 @@ contract Princess is Initializable {
     mapping(uint256 => uint256) private idMap;
     mapping(uint256 => uint256) private males;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp <
+                tournament.startDate() + tournament.tournamentDuration(),
+            "Tournament is over."
+        );
+    }
+
     function initialize(address _micro) external initializer {
         micro = IMicroColonies(_micro);
         tournament = ITournament(msg.sender);
     }
 
-    function mate(uint256 _amount) public {
+    function mate(uint256 _amount) public checkState {
         uint256[] memory ids = micro.getUserIds(msg.sender, 5, true);
         uint256[] memory maleIds = micro.getUserIds(msg.sender, 4, true);
         require(_amount <= ids.length, "Not enough princesses.");
@@ -35,7 +48,7 @@ contract Princess is Initializable {
         males[missionId] = maleIds.length;
     }
 
-    function claimMated(uint256 _id) public {
+    function claimMated(uint256 _id) public checkState {
         uint256[] memory ids = micro.getMissionIds(msg.sender, 5, _id);
         uint256[] memory maleIds = micro.getMissionIds(
             msg.sender,
