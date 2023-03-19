@@ -156,7 +156,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.farmReward = 80;
         tariff.buildReward = 5;
         tariff.soldierHeal = 80;
-        nonce = 42;
+        nonce = 46;
         __Ownable_init();
     }
 
@@ -347,6 +347,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         increaseCapacity(0, _user, 20);
         print(_user, 1, 19);
         print(_user, 0, 1);
+        participants.push(_user);
         funghiBalance[_user] = 100000; // remove at production!
         feromonBalance[_user] = 100000; // remove at production!
     }
@@ -355,14 +356,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         require(!lollipops[msg.sender].used);
         lollipops[msg.sender].used = true;
         lollipops[msg.sender].timestamp = block.timestamp;
-    }
-
-    // princess + male
-    function matingBoost(address _user, uint256 _target)
-        public
-        checkAccess(msg.sender, _target)
-    {
-        lollipops[_user].timestamp = block.timestamp;
     }
 
     function findIndex(
@@ -447,7 +440,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         userMissions[_user][_target].push(highest);
     }
 
-    // access: soldier, larva, worker, princess, zombie
     function addToMission(
         address _user,
         uint256 _target,
@@ -477,7 +469,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         missionIds[_user][_target][_missionId].push(_id);
     }
 
-    // access: larva, zombie, worker, soldier
     function finalizeMission(
         address _user,
         uint256 _target,
@@ -502,7 +493,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         missionStates[_user][_target][_id] = MissionState(2);
     }
 
-    // access: worker, queen, princess, zombie, larva, soldier
     function earnXp(
         uint256 _target,
         address _user,
@@ -511,7 +501,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         feromonBalance[_user] += _amount;
     }
 
-    // access: worker, zombie
     function earnFunghi(
         uint256 _target,
         address _user,
@@ -520,7 +509,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         funghiBalance[_user] += _amount;
     }
 
-    // access: queen, larva, soldier
     function spendFunghi(
         uint256 _target,
         address _user,
@@ -529,7 +517,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         funghiBalance[_user] -= _amount;
     }
 
-    // access: queen
     function spendFeromon(
         uint256 _target,
         address _user,
@@ -538,7 +525,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         feromonBalance[_user] -= _amount;
     }
 
-    // access: queen
     function resetQueen(uint256 _target, uint256 _id)
         public
         checkAccess(msg.sender, _target)
@@ -547,7 +533,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         q[_id].eggs = 0;
     }
 
-    // access: self, worker
     function increaseCapacity(
         uint256 _target,
         address _user,
@@ -556,7 +541,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         capacity[_user] += _amount;
     }
 
-    // access: worker, soldier
     function decreaseHP(uint256 _target, uint256 _id)
         public
         checkAccess(msg.sender, _target)
@@ -570,7 +554,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         }
     }
 
-    // access: queen
     function addEggs(
         uint256 _target,
         uint256 _id,
@@ -579,7 +562,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         q[_id].eggs += _amount;
     }
 
-    // access: queen
     function queenLevelup(uint256 _id, uint256 _target)
         public
         checkAccess(msg.sender, _target)
@@ -587,7 +569,6 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         q[_id].level++;
     }
 
-    // access: soldier
     function healSoldier(uint256 _target, uint256 _id)
         public
         checkAccess(msg.sender, _target)
