@@ -508,7 +508,7 @@ describe("Unit Tests", function() {
     it("Should mate on-season", async () => {
       const { owner, microColonies, princess, princess_ids } = await loadFixture(hatch_Fixture);
       expect(princess_ids.length).to.be.greaterThanOrEqual(1);
-      const { start, end } = await princess.seasonDates();
+      const [start, end] = await princess.seasonDates();
       await time.increaseTo(parseFloat(start[1].toString()));
       await princess.mate(princess_ids.length);
       let missions = await microColonies.getUserMissions(owner.address, 5);
@@ -520,7 +520,7 @@ describe("Unit Tests", function() {
     it("Should mate off-season", async () => {
       const { owner, microColonies, princess, princess_ids } = await loadFixture(hatch_Fixture);
       expect(princess_ids.length).to.be.greaterThanOrEqual(1);
-      const { start, end } = await princess.seasonDates();
+      const [start, end] = await princess.seasonDates();
       await time.increaseTo(parseFloat(start[1].toString()) - 1000);
       await princess.mate(princess_ids.length);
       let missions = await microColonies.getUserMissions(owner.address, 5);
