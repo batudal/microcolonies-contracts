@@ -74,7 +74,7 @@ contract Queen is Initializable {
             epochs = fert[micro.q(_id).level];
         }
         uint256 amount = epochs * micro.tariff().queenPortion;
-        micro.resetQueen(0, 0, _id);
+        micro.resetQueen(0, _id);
         micro.spendFunghi(0, msg.sender, amount);
         micro.earnXp(0, msg.sender, epochs);
     }

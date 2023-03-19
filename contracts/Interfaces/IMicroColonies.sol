@@ -176,11 +176,7 @@ interface IMicroColonies {
         uint256 _amount
     ) external;
 
-    function resetQueen(
-        uint256 _type,
-        uint256 _targetType,
-        uint256 _id
-    ) external;
+    function resetQueen(uint256 _target, uint256 _id) external;
 
     function spendFunghi(
         uint256 _target,

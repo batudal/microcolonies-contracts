@@ -156,7 +156,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.farmReward = 80;
         tariff.buildReward = 5;
         tariff.soldierHeal = 80;
-        nonce = 46;
+        nonce = 47;
         __Ownable_init();
     }
 
