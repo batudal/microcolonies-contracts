@@ -2,7 +2,7 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
-    "txHash": "0x0ed462b1dee986d30fe65eb8e16fc0db9034ed2224d78eeec194e5fca531ab32"
+    "txHash": "0xd02333497ce20177ef2040b2d2d56fa9ce8b3229846befd6bddbfb92ae7ae612"
   },
   "proxies": [
     {
@@ -12,14 +12,14 @@
     },
     {
       "address": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
-      "txHash": "0x183d42488b947c2ebb8f68a790ae33e67ff30c3bdf696f8965e0247fee1cd97b",
+      "txHash": "0xec48a4500674ba931207eefe894548207092741fc8b73e1beabf141efa57df9d",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "54303068a4bfb1f045355f72c8fd6847743d05efa717b7f587e9febd47e1947a": {
+    "fb4976d331b7b22d4c77a6bcb2ca884e9e409b7613357189e2dabcb2b1fac0d0": {
       "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
-      "txHash": "0xae34544056fa06029ed8e707fa281289df40da6eb6e44e5b6a171f640304f137",
+      "txHash": "0x07333a8299bc9559be4c58564edcd921815d6950f13d28678d89513040d4b7b8",
       "layout": {
         "storage": [
           {
@@ -43,7 +43,7 @@
             "label": "tournaments",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(Tournament)5653)dyn_storage",
+            "type": "t_array(t_contract(Tournament)2328)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:8"
           },
@@ -73,7 +73,7 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_contract(Tournament)5653)dyn_storage": {
+          "t_array(t_contract(Tournament)2328)dyn_storage": {
             "label": "contract Tournament[]",
             "numberOfBytes": "32"
           },
@@ -81,7 +81,7 @@
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(Tournament)5653": {
+          "t_contract(Tournament)2328": {
             "label": "contract Tournament",
             "numberOfBytes": "20"
           },

@@ -3,13 +3,14 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Interfaces/ITournament.sol";
 import "./Interfaces/IMicroColonies.sol";
 import "./Interfaces/IModule.sol";
 import "./Helpers/QuickStruct.sol";
 
-contract Tournament is Initializable {
+contract Tournament is Initializable, OwnableUpgradeable {
     uint256 immutable MAX_APPROVAL = 2**256 - 1;
 
     struct Contracts {
@@ -22,14 +23,9 @@ contract Tournament is Initializable {
         address zombie;
     }
 
-    enum Mode {
-        FEROMON,
-        FUNGHI,
-        POPULATION
-    }
-
     Contracts public contracts;
-    Mode public mode;
+    uint256 public mode; // 0-feromon, 1-funghi, 2-population
+    uint256 public maxParticipants;
     uint256 public epochDuration;
     uint256 public tournamentDuration;
     string public tournamentTitle;
@@ -46,13 +42,43 @@ contract Tournament is Initializable {
 
     mapping(address => string) public nicknames;
 
+    modifier checkState() {
+        _checkState();
+        _;
+    }
+
+    function _checkState() internal view {
+        require(
+            block.timestamp < startDate + tournamentDuration,
+            "Tournament is over."
+        );
+    }
+
+    function isParticipant(address _user) private view returns (bool) {
+        for (uint256 i; i < participants.length; ++i) {
+            if (participants[i] == _user) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function emergencyWithdraw() external {
+        if (
+            block.timestamp < (startDate * 11) / 10 && isParticipant(msg.sender)
+        ) {
+            IERC20(currencyToken).transfer(msg.sender, entranceFee);
+        }
+    }
+
     function initialize(
         string memory _tournamentTitle,
         uint256 _entranceFee,
         address _currencyToken,
         uint256 _epochDuration,
         uint256 _startDate,
-        Mode _mode,
+        uint256 _maxParticipants,
+        uint256 _mode,
         address[] calldata _implementations
     ) public initializer {
         tournamentTitle = _tournamentTitle;
@@ -61,6 +87,7 @@ contract Tournament is Initializable {
         currencyToken = _currencyToken;
         entranceFee = _entranceFee;
         startDate = _startDate;
+        maxParticipants = _maxParticipants;
         mode = _mode;
 
         contracts.microColonies = Clones.clone(_implementations[0]);
@@ -102,6 +129,8 @@ contract Tournament is Initializable {
             contracts.zombie,
             q_access
         );
+
+        __Ownable_init();
     }
 
     function enterTournament(string memory _nickname) public {
@@ -110,7 +139,9 @@ contract Tournament is Initializable {
             "You don't have enough tokens."
         );
         require(block.timestamp >= startDate, "Tournament not started.");
+        require(participants.length <= maxParticipants, "Tournament is full.");
         nicknames[msg.sender] = _nickname;
+        participants.push(msg.sender);
         IERC20(currencyToken).transferFrom(
             msg.sender,
             address(this),
@@ -127,7 +158,30 @@ contract Tournament is Initializable {
         nickname = nicknames[_user];
     }
 
-    function scoreboard() public {}
+    function getScores(uint256 _mode)
+        external
+        view
+        returns (uint256[] memory scores)
+    {
+        scores = new uint256[](participants.length);
+        for (uint256 i; i < participants.length; ++i) {
+            if (_mode == 0) {
+                scores[i] = IMicroColonies(contracts.microColonies)
+                    .feromonBalance(participants[i]);
+            } else if (_mode == 1) {
+                scores[i] = IMicroColonies(contracts.microColonies)
+                    .feromonBalance(participants[i]);
+            } else {
+                uint256 total;
+                for (uint256 j = 0; j <= 6; ++j) {
+                    total += sum(
+                        IMicroColonies(contracts.microColonies).counters(i)
+                    );
+                }
+                scores[i] = total;
+            }
+        }
+    }
 
     function sum(uint256[] memory data) internal pure returns (uint256) {
         uint256 total;
@@ -170,11 +224,25 @@ contract Tournament is Initializable {
             .getDescendingStruct(ps);
         for (uint256 i = 0; i < descending.length; ++i) {
             if (descending[i].p_address == _user) {
-                return i++;
+                return ++i;
             }
         }
         return 0;
     }
 
-    function claimReward() public {}
+    function claimReward() public {
+        uint256 placement = getPlacement(msg.sender, mode);
+        uint256 total_reward = participants.length * entranceFee;
+        if (placement == 1) {
+            IERC20(currencyToken).transfer(msg.sender, total_reward / 2);
+        } else if (placement == 2) {
+            IERC20(currencyToken).transfer(msg.sender, total_reward / 4);
+        } else if (placement == 3) {
+            IERC20(currencyToken).transfer(msg.sender, total_reward / 8);
+        } else if (placement == 4) {
+            IERC20(currencyToken).transfer(msg.sender, total_reward / 16);
+        }
+    }
+
+    function claimProfits() public onlyOwner {}
 }

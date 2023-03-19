@@ -24,7 +24,9 @@ contract TournamentFactory is Initializable {
         uint256 entranceFee,
         address currencyToken,
         uint256 epochDuration,
-        uint256 startDate
+        uint256 startDate,
+        uint256 maxParticipants,
+        uint256 mode
     ) public {
         Tournament tournament = new Tournament();
         tournament.initialize(
@@ -33,6 +35,8 @@ contract TournamentFactory is Initializable {
             currencyToken,
             epochDuration,
             startDate,
+            maxParticipants,
+            mode,
             implementations
         );
         tournaments.push(tournament);

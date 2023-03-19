@@ -131,6 +131,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
     }
 
     modifier checkState() {
+        _checkState();
         _;
     }
 
