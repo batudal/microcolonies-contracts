@@ -22,15 +22,15 @@ contract Princess is Initializable {
         uint256[] memory ids = micro.getUserIds(msg.sender, 5, true);
         uint256[] memory maleIds = micro.getUserIds(msg.sender, 4, true);
         require(_amount <= ids.length, "Not enough princesses.");
-        uint256 missionId = micro.createMission(msg.sender, 5, 5);
-        uint256 maleMissionId = micro.createMission(msg.sender, 4, 4);
+        uint256 missionId = micro.createMission(msg.sender, 5);
+        uint256 maleMissionId = micro.createMission(msg.sender, 4);
         for (uint256 i; i < _amount; i++) {
-            micro.addToMission(msg.sender, 5, 5, 0, ids[i], missionId);
+            micro.addToMission(msg.sender, 5, 0, ids[i], missionId);
         }
         for (uint256 i; i < maleIds.length; i++) {
-            micro.addToMission(msg.sender, 5, 4, 0, maleIds[i], maleMissionId);
+            micro.addToMission(msg.sender, 4, 0, maleIds[i], maleMissionId);
         }
-        micro.earnXp(5, 5, msg.sender, _amount + maleIds.length);
+        micro.earnXp(5, msg.sender, _amount + maleIds.length);
         idMap[missionId] = maleMissionId;
         males[missionId] = maleIds.length;
     }
@@ -53,13 +53,13 @@ contract Princess is Initializable {
         require(!micro.p(ids[0]).mission.missionFinalized);
         uint256 princesses = ids.length;
         uint256 threshold = onSeason(msg.sender, _id) ? 1 : 4;
-        uint256 nonce = micro.setNonce(5, 5) % 5;
+        uint256 nonce = micro.setNonce(5) % 5;
         for (uint256 i; i < maleIds.length; i++) {
-            micro.kill(msg.sender, 5, 4, maleIds[i]);
+            micro.kill(msg.sender, 4, maleIds[i]);
             if (princesses > 0) {
                 if (nonce >= threshold) {
-                    micro.kill(msg.sender, 5, 5, ids[princesses - 1]);
-                    micro.print(msg.sender, 5, 0, 1);
+                    micro.kill(msg.sender, 5, ids[princesses - 1]);
+                    micro.print(msg.sender, 0, 1);
                     princesses--;
                 }
             } else {
@@ -70,23 +70,27 @@ contract Princess is Initializable {
 
     function isBoosted(address _user, uint256 _id) public view returns (bool) {
         uint256 id = micro.getMissionIds(_user, 5, _id)[0];
-        return false;
-        // return
-        //     (micro.p(id).mission.missionTimestamp >
-        //         micro.lollipops(_user).timestamp &&
-        //         micro.p(id).mission.missionTimestamp <=
-        //         (micro.lollipops(_user).timestamp +
-        //             micro.schedule().lollipopDuration))
-        //         ? true
-        //         : false;
+        return
+            (micro.p(id).mission.missionTimestamp >
+                micro.lollipops(_user).timestamp &&
+                micro.p(id).mission.missionTimestamp <=
+                (micro.lollipops(_user).timestamp +
+                    micro.schedule().lollipopDuration))
+                ? true
+                : false;
     }
 
     function onSeason(address _user, uint256 _id) public view returns (bool) {
-        (uint256[4] memory start, uint256[4] memory end) = seasonDates();
+        uint256 date = tournament.startDate();
+        uint256 duration = tournament.tournamentDuration();
+        uint256 indays = duration / 86400;
         uint256[] memory ids = micro.getMissionIds(_user, 5, _id);
         uint256 timestamp = micro.p(ids[0]).mission.missionTimestamp;
-        for (uint256 i; i < 4; i++) {
-            if ((timestamp >= start[i]) && (timestamp <= end[i])) {
+        for (uint256 i; i < indays; i++) {
+            if (
+                (timestamp >= (date + (i * duration) / indays)) &&
+                (timestamp <= (date + (i * duration) / indays) + 3600)
+            ) {
                 return true;
             }
         }
@@ -96,13 +100,17 @@ contract Princess is Initializable {
     function seasonDates()
         public
         view
-        returns (uint256[4] memory start, uint256[4] memory end)
+        returns (uint256[] memory, uint256[] memory)
     {
         uint256 date = tournament.startDate();
-        uint256 tournamentDuration = tournament.tournamentDuration();
-        for (uint256 i; i < 4; i++) {
-            start[i] = date + (tournamentDuration / 4) * i;
-            end[i] = start[i] + tournamentDuration / 16;
+        uint256 duration = tournament.tournamentDuration();
+        uint256 indays = duration / 86400;
+        uint256[] memory start = new uint256[](indays);
+        uint256[] memory end = new uint256[](indays);
+        for (uint256 i = 0; i < indays; i++) {
+            start[i] = date + (i * duration) / indays;
+            end[i] = start[i] + 3600;
         }
+        return (start, end);
     }
 }

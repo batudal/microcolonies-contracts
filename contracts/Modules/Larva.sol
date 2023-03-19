@@ -14,8 +14,8 @@ contract Larva is Initializable {
         tournament = ITournament(msg.sender);
     }
 
-    function isBoosted(address _user, uint256 _id) public view returns (bool) {
-        uint256[] memory ids = micro.getMissionIds(_user, 1, _id);
+    function isBoosted(address _user, uint256 _id) public pure returns (bool) {
+        // uint256[] memory ids = micro.getMissionIds(_user, 1, _id);
         return false;
         // return
         //     (micro.l(id).mission.missionTimestamp >
@@ -39,17 +39,15 @@ contract Larva is Initializable {
         if (_feedAmount > 0) {
             micro.spendFunghi(
                 1,
-                1,
                 msg.sender,
                 micro.tariff().larvaPortion * _feedAmount
             );
         }
-        uint256 missionId = micro.createMission(msg.sender, 1, 1);
+        uint256 missionId = micro.createMission(msg.sender, 1);
         for (uint256 i; i < _amount; i++) {
             uint256 missionType = _feedAmount > 0 ? 1 : 0;
             micro.addToMission(
                 msg.sender,
-                1,
                 1,
                 missionType,
                 larvae[i],
@@ -57,7 +55,7 @@ contract Larva is Initializable {
             );
             _feedAmount = _feedAmount > 0 ? _feedAmount - 1 : 0;
         }
-        micro.earnXp(1, 1, msg.sender, _amount);
+        micro.earnXp(1, msg.sender, _amount);
     }
 
     function hatch(uint256 _id) public {
@@ -69,7 +67,7 @@ contract Larva is Initializable {
         for (uint256 i = 0; i < ids.length; i++) {
             _hatch(msg.sender, ids[i]);
         }
-        micro.finalizeMission(msg.sender, 1, 1, _id);
+        micro.finalizeMission(msg.sender, 1, _id);
     }
 
     function _hatch(address _user, uint256 _id) private {
@@ -81,22 +79,22 @@ contract Larva is Initializable {
                 micro.schedule().incubation / speed
         );
         require(!micro.l(_id).mission.missionFinalized);
-        uint256 nonce = micro.setNonce(1, 1) % modulo;
+        uint256 nonce = micro.setNonce(1) % modulo;
         require(micro.nested(_user) < micro.capacity(_user));
         if (nonce < 3) {
-            micro.print(_user, 5, 5, 1);
+            micro.print(_user, 5, 1);
             emit Hatch(_user, 5);
         } else if (nonce >= 3 && nonce < 18) {
-            micro.print(_user, 4, 4, 1);
+            micro.print(_user, 4, 1);
             emit Hatch(_user, 4);
         } else if (nonce >= 18 && nonce < 33) {
-            micro.print(_user, 3, 3, 1);
+            micro.print(_user, 3, 1);
             emit Hatch(_user, 3);
         } else {
-            micro.print(_user, 2, 2, 1);
+            micro.print(_user, 2, 1);
             emit Hatch(_user, 2);
         }
-        micro.kill(_user, 1, 1, _id);
+        micro.kill(_user, 1, _id);
     }
 
     event Hatch(address _user, uint256 _type);

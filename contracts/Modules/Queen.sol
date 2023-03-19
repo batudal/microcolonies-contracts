@@ -48,9 +48,9 @@ contract Queen is Initializable {
     function claimEggs(uint256 _id) public {
         uint256 deserved = eggsLaid(_id) - micro.q(_id).eggs;
         if (deserved > 0) {
-            micro.addEggs(0, 0, _id, deserved);
-            micro.print(msg.sender, 1, 1, deserved);
-            micro.earnXp(0, 0, msg.sender, deserved);
+            micro.addEggs(0, _id, deserved);
+            micro.print(msg.sender, 1, deserved);
+            micro.earnXp(0, msg.sender, deserved);
         }
     }
 
@@ -74,9 +74,9 @@ contract Queen is Initializable {
             epochs = fert[micro.q(_id).level];
         }
         uint256 amount = epochs * micro.tariff().queenPortion;
-        micro.resetQueen(0, 0, _id);
-        micro.spendFunghi(0, 0, msg.sender, amount);
-        micro.earnXp(0, 0, msg.sender, epochs);
+        micro.resetQueen(0, _id);
+        micro.spendFunghi(0, msg.sender, amount);
+        micro.earnXp(0, msg.sender, epochs);
     }
 
     function queenUpgrade(uint256 _id) public {
@@ -90,8 +90,8 @@ contract Queen is Initializable {
         require(micro.q(_id).level < 3);
         claimEggs(_id);
         feedQueen(_id);
-        micro.spendFeromon(0, 0, msg.sender, amount);
-        micro.queenLevelup(_id, 0, 0);
+        micro.spendFeromon(0, msg.sender, amount);
+        micro.queenLevelup(_id, 0);
     }
 
     function getQueenEnergy(uint256 _id) public view returns (uint256 energy) {
