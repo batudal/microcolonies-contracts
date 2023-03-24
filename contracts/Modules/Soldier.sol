@@ -58,6 +58,15 @@ contract Soldier is Initializable {
     }
 
     function reveal(uint256 _id) public view returns (address target) {
+        uint256[] memory soldiers = micro.getMissionIds(msg.sender, 3, _id);
+        uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
+        require(
+            micro.s(soldiers[0]).mission.missionTimestamp +
+                micro.schedule().soldierRaid /
+                speed <
+                block.timestamp,
+            "Mission is not over yet."
+        );
         address[] memory participants = otherParticipants(msg.sender);
         uint256 prob = uint256(keccak256(abi.encodePacked(msg.sender, _id))) %
             participants.length;
@@ -144,14 +153,6 @@ contract Soldier is Initializable {
 
     function attack(uint256 _id) public checkState {
         uint256[] memory soldiers = micro.getMissionIds(msg.sender, 3, _id);
-        uint256 speed = isBoosted(msg.sender, _id) ? 2 : 1;
-        require(
-            micro.s(soldiers[0]).mission.missionTimestamp +
-                micro.schedule().soldierRaid /
-                speed <
-                block.timestamp,
-            "Mission is not over yet."
-        );
         address target = reveal(_id);
         uint256[] memory targetSoldiers = micro.getUserIds(target, 3, true);
         uint256[] memory targetLarvae = getIncubating(target);
@@ -180,7 +181,7 @@ contract Soldier is Initializable {
         uint256[] memory targetSoldiers,
         uint256[] memory targetLarvae,
         uint256[] memory targetZombies
-    ) public checkState returns (uint256 reward) {
+    ) private checkState returns (uint256 reward) {
         uint256 attackerSoldierCount = attackerSoldiers.length;
         uint256 targetZombiesCount = targetZombies.length;
         for (uint256 z; z < targetZombies.length; z++) {

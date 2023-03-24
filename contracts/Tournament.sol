@@ -252,7 +252,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
         }
     }
 
-    function claimProfit() public onlyOwner {
+    function claimProfit() public onlyOwner checkState {
         uint256 total_reward = participants.length * entranceFee;
         IERC20(currencyToken).transfer(msg.sender, total_reward / 16);
     }
