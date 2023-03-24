@@ -81,7 +81,7 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         COMPLETED
     }
 
-    // battle (50) 50 soldier -> WRITE +50
+    /// battle (50) 50 soldier -> WRITE +50
 
     /// @dev user => QLWSMPZ => ids
     mapping(address => mapping(uint256 => uint256[])) public userIds;
@@ -160,12 +160,12 @@ contract MicroColonies is Initializable, OwnableUpgradeable {
         tariff.larvaPortion = 400;
         tariff.queenPortion = 240;
         tariff.queenUpgrade = 1000;
-        tariff.conversion = 10; // 100 in production!
+        tariff.conversion = 10; /// production: 100
         tariff.zombieHarvest = 400;
         tariff.farmReward = 80;
         tariff.buildReward = 5;
         tariff.soldierHeal = 80;
-        nonce = 47;
+        nonce = 47; /// production: block.timestamp
         __Ownable_init();
     }
 

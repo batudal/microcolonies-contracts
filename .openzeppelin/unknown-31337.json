@@ -2,7 +2,7 @@
   "manifestVersion": "3.2",
   "admin": {
     "address": "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
-    "txHash": "0xf09cb0bb84fc79ed265861f43c1cfa46da0ba064b553915beab6e25095ee8922"
+    "txHash": "0x7d712150f406b217cacdab788364fe0b3770b5e90c94e14fc04ff08d94b69649"
   },
   "proxies": [
     {
@@ -12,14 +12,14 @@
     },
     {
       "address": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d",
-      "txHash": "0x360841c05da6c63b925fe9171f2c4b7fe7bb705b67d17bc0577879d391770f2d",
+      "txHash": "0xfd1870a67481c32960012b84821ec1db2f6a73fc78e2982102df079fe77b2719",
       "kind": "transparent"
     }
   ],
   "impls": {
-    "fb4976d331b7b22d4c77a6bcb2ca884e9e409b7613357189e2dabcb2b1fac0d0": {
+    "a5462b6d61fc6b21b793147aec7b17ab298752816489f3b4a8c7cd8326781863": {
       "address": "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
-      "txHash": "0x64357504ad487f386dbcd8152f1090615ef7e9d7a7ac11682387ab0170372f14",
+      "txHash": "0x0a7fd242cc5f157929e14c78a4da1a055157c1434b0dc82256b3d2976ef65bde",
       "layout": {
         "storage": [
           {
@@ -40,28 +40,52 @@
             "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
           },
           {
-            "label": "tournaments",
+            "label": "__gap",
             "offset": 0,
             "slot": "1",
-            "type": "t_array(t_contract(Tournament)2328)dyn_storage",
-            "contract": "TournamentFactory",
-            "src": "contracts/TournamentFactory.sol:8"
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
           },
           {
-            "label": "implementations",
+            "label": "_owner",
             "offset": 0,
-            "slot": "2",
-            "type": "t_array(t_address)dyn_storage",
+            "slot": "51",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "tournaments",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_contract(Tournament)2379)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:9"
           },
           {
-            "label": "userTournaments",
+            "label": "implementations",
             "offset": 0,
-            "slot": "3",
-            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "slot": "102",
+            "type": "t_array(t_address)dyn_storage",
             "contract": "TournamentFactory",
             "src": "contracts/TournamentFactory.sol:10"
+          },
+          {
+            "label": "userTournaments",
+            "offset": 0,
+            "slot": "103",
+            "type": "t_mapping(t_address,t_array(t_address)dyn_storage)",
+            "contract": "TournamentFactory",
+            "src": "contracts/TournamentFactory.sol:11"
           }
         ],
         "types": {
@@ -73,20 +97,32 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_contract(Tournament)2328)dyn_storage": {
+          "t_array(t_contract(Tournament)2379)dyn_storage": {
             "label": "contract Tournament[]",
             "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
           },
           "t_bool": {
             "label": "bool",
             "numberOfBytes": "1"
           },
-          "t_contract(Tournament)2328": {
+          "t_contract(Tournament)2379": {
             "label": "contract Tournament",
             "numberOfBytes": "20"
           },
           "t_mapping(t_address,t_array(t_address)dyn_storage)": {
             "label": "mapping(address => address[])",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
             "numberOfBytes": "32"
           },
           "t_uint8": {

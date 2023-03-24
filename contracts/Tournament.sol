@@ -47,7 +47,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
         _;
     }
 
-    function _checkState() internal view {
+    function _checkState() public view {
         require(
             block.timestamp < startDate + tournamentDuration,
             "Tournament is over."
@@ -75,15 +75,23 @@ contract Tournament is Initializable, OwnableUpgradeable {
         string memory _tournamentTitle,
         uint256 _entranceFee,
         address _currencyToken,
-        uint256 _epochDuration,
         uint256 _startDate,
         uint256 _maxParticipants,
         uint256 _mode,
+        uint256 _speed,
         address[] calldata _implementations
     ) public initializer {
         tournamentTitle = _tournamentTitle;
-        epochDuration = _epochDuration;
-        tournamentDuration = _epochDuration * 112;
+        if (_speed == 0) {
+            epochDuration = 120;
+            tournamentDuration = epochDuration * 60;
+        } else if (_speed == 1) {
+            epochDuration = 1800;
+            tournamentDuration = epochDuration * 90;
+        } else {
+            epochDuration = 21600;
+            tournamentDuration = epochDuration * 56;
+        }
         currencyToken = _currencyToken;
         entranceFee = _entranceFee;
         startDate = _startDate;
@@ -91,7 +99,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
         mode = _mode;
 
         contracts.microColonies = Clones.clone(_implementations[0]);
-        IMicroColonies(contracts.microColonies).initialize(_epochDuration);
+        IMicroColonies(contracts.microColonies).initialize(epochDuration);
         contracts.queen = Clones.clone(_implementations[1]);
         IModule(contracts.queen).initialize(contracts.microColonies);
         contracts.larva = Clones.clone(_implementations[2]);
@@ -138,7 +146,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
             IERC20(currencyToken).balanceOf(msg.sender) >= entranceFee,
             "You don't have enough tokens."
         );
-        require(block.timestamp >= startDate, "Tournament not started.");
+        require(block.timestamp < startDate, "Tournament has started.");
         require(participants.length <= maxParticipants, "Tournament is full.");
         nicknames[msg.sender] = _nickname;
         participants.push(msg.sender);
@@ -230,7 +238,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
         return 0;
     }
 
-    function claimReward() public {
+    function claimReward() public checkState {
         uint256 placement = getPlacement(msg.sender, mode);
         uint256 total_reward = participants.length * entranceFee;
         if (placement == 1) {
@@ -244,5 +252,8 @@ contract Tournament is Initializable, OwnableUpgradeable {
         }
     }
 
-    function claimProfits() public onlyOwner {}
+    function claimProfit() public onlyOwner {
+        uint256 total_reward = participants.length * entranceFee;
+        IERC20(currencyToken).transfer(msg.sender, total_reward / 16);
+    }
 }

@@ -11,7 +11,7 @@ async function main() {
   const microColonies = await MicroColonies.deploy();
   await microColonies.deployed();
   console.log("Microcolonies -> ", microColonies.address);
-  const init_microColonies = await microColonies.initialize("0", [takezo]);
+  const init_microColonies = await microColonies.initialize(120);
   await init_microColonies.wait();
   // queen deploy
   const Queen = await ethers.getContractFactory("Queen");

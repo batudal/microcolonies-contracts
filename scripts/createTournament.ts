@@ -16,7 +16,7 @@ async function main() {
   console.log("Tournament address -> ", tournamentAddr);
   const Tournament = await ethers.getContractFactory("Tournament");
   const tournament = Tournament.attach(tournamentAddr);
-  const entertx = await tournament.enterTournament("Takezo", 2);
+  const entertx = await tournament.enterTournament("Takezo");
   await entertx.wait();
   console.log("Entered.");
 }

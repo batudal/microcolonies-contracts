@@ -26,7 +26,7 @@ describe("Unit Tests", function() {
     const MicroColonies = await ethers.getContractFactory("MicroColonies");
     const microColonies = await MicroColonies.deploy();
     await microColonies.deployed();
-    const init_microColonies = await microColonies.initialize("0",);
+    const init_microColonies = await microColonies.initialize("0");
     await init_microColonies.wait();
     // queen deploy
     const Queen = await ethers.getContractFactory("Queen");
@@ -87,7 +87,7 @@ describe("Unit Tests", function() {
     const { mock20, MicroColonies, Queen, Larva, Worker, Soldier, Princess, Zombie, tournamentFactory } = await loadFixture(deployFixture);
     const [owner, addr1, addr2] = await ethers.getSigners();
     const now = Math.floor(Date.now() / 1000).toString();
-    await tournamentFactory.createTournament("Title", 1, mock20.address, epoch, now, 10, 0);
+    await tournamentFactory.createTournament("Title", 1, mock20.address, now + 10, 10, 0, 2);
     const tournamentAddr = (await tournamentFactory.getTournaments())[0];
     const Tournament = await ethers.getContractFactory("Tournament");
     const tournament = Tournament.attach(tournamentAddr);
