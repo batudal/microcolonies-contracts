@@ -11,7 +11,8 @@ import "./Interfaces/IModule.sol";
 import "./Helpers/QuickStruct.sol";
 
 contract Tournament is Initializable, OwnableUpgradeable {
-    uint256 immutable MAX_APPROVAL = 2**256 - 1;
+    uint256 constant MAX_APPROVAL = 2**256 - 1;
+    address constant DEAD = 0x0000000000000000000000000000000000000000;
 
     struct Contracts {
         address microColonies;
@@ -54,7 +55,7 @@ contract Tournament is Initializable, OwnableUpgradeable {
         );
     }
 
-    function isParticipant(address _user) private view returns (bool) {
+    function isParticipant(address _user) public view returns (bool) {
         for (uint256 i; i < participants.length; ++i) {
             if (participants[i] == _user) {
                 return true;
@@ -142,19 +143,21 @@ contract Tournament is Initializable, OwnableUpgradeable {
     }
 
     function enterTournament(string memory _nickname) public {
-        require(
-            IERC20(currencyToken).balanceOf(msg.sender) >= entranceFee,
-            "You don't have enough tokens."
-        );
         require(block.timestamp < startDate, "Tournament has started.");
         require(participants.length <= maxParticipants, "Tournament is full.");
+        if (currencyToken != DEAD) {
+            require(
+                IERC20(currencyToken).balanceOf(msg.sender) >= entranceFee,
+                "You don't have enough tokens."
+            );
+            IERC20(currencyToken).transferFrom(
+                msg.sender,
+                address(this),
+                entranceFee
+            );
+        }
         nicknames[msg.sender] = _nickname;
         participants.push(msg.sender);
-        IERC20(currencyToken).transferFrom(
-            msg.sender,
-            address(this),
-            entranceFee
-        );
         IMicroColonies(contracts.microColonies).openPack(msg.sender);
     }
 

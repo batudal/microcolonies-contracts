@@ -47,10 +47,6 @@ contract TournamentFactory is Ownable {
         return tournaments;
     }
 
-    function getUserTournaments() public view returns (address[] memory) {
-        return userTournaments[msg.sender];
-    }
-
     function claimProfits() public onlyOwner {
         for (uint256 i = 0; i < tournaments.length; ++i) {
             Tournament tournament_ = Tournament(tournaments[i]);
